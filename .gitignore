@@ -10,3 +10,12 @@ seed_tasks.js
 .vercel
 sprint-logs/
 sprint-usage.csv
+
+# Diagnostic/probe artifacts (Claude session junk)
+*.err
+acceptance-auto.json
+acceptance-auto.png
+orbit-check.png
+stuck-probe.json
+wall-shot.png
+*-shot.png
