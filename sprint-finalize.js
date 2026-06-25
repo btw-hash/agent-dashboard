@@ -5,32 +5,32 @@
 // Prints a single JSON line to stdout: { tag, branch, prNumber, prUrl }
 // so sprint.bat can pass the data to sprint-tg.js.
 
-require("dotenv").config();
-const { execSync } = require("child_process");
-const path = require("path");
+require('dotenv').config();
+const { execSync } = require('child_process');
+const path = require('path');
 
 const REPO_DIR = __dirname;
-const STAGING = "sprint-staging";
-const BASE = "master";
-const REPO_SLUG = "workmailan8n-hash/agent-dashboard";
+const STAGING = 'sprint-staging';
+const BASE = 'master';
+const REPO_SLUG = 'btw-hash/agent-dashboard';
 
 function git(cmd) {
   return execSync(`git ${cmd}`, {
     cwd: REPO_DIR,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
 }
 
 function fmtTs() {
   const d = new Date();
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
 }
 
 async function openPullRequest(branch, tag) {
   const token = process.env.GITHUB_TOKEN;
-  if (!token) throw new Error("GITHUB_TOKEN not set in .env");
+  if (!token) throw new Error('GITHUB_TOKEN not set in .env');
 
   // Grab last commit subject for PR title.
   const subject = git(`log -1 --format=%s`);
@@ -44,23 +44,21 @@ async function openPullRequest(branch, tag) {
     ``,
     `**Do not merge via GitHub UI.** This PR exists only to spin up a Railway preview environment.`,
     `Approve or revert through the Telegram report buttons.`,
-  ].join("\n");
+  ].join('\n');
 
   const res = await fetch(`https://api.github.com/repos/${REPO_SLUG}/pulls`, {
-    method: "POST",
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      "Content-Type": "application/json",
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({ title, body, head: branch, base: BASE }),
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(
-      `GitHub PR create failed ${res.status}: ${JSON.stringify(data).slice(0, 400)}`,
-    );
+    throw new Error(`GitHub PR create failed ${res.status}: ${JSON.stringify(data).slice(0, 400)}`);
   }
   return { prNumber: data.number, prUrl: data.html_url };
 }
@@ -70,7 +68,7 @@ async function openPullRequest(branch, tag) {
   try {
     // Если в рабочем дереве остались несохранённые правки (например, ручная WIP
     // на master), checkout упадёт. Стэшим под меткой, потом восстановим.
-    const dirty = git("status --porcelain");
+    const dirty = git('status --porcelain');
     if (dirty) {
       git(`stash push -u -m "sprint-finalize autostash ${fmtTs()}"`);
       stashed = true;
@@ -79,12 +77,10 @@ async function openPullRequest(branch, tag) {
     // Ensure we are on staging and have the latest agent commit.
     git(`checkout ${STAGING}`);
 
-    const sha = git("rev-parse HEAD");
+    const sha = git('rev-parse HEAD');
     const baseSha = git(`merge-base ${BASE} HEAD`);
     if (sha === baseSha) {
-      console.log(
-        JSON.stringify({ skip: true, reason: "no new commits on staging" }),
-      );
+      console.log(JSON.stringify({ skip: true, reason: 'no new commits on staging' }));
       return;
     }
 
@@ -111,8 +107,8 @@ async function openPullRequest(branch, tag) {
     // Возвращаем стэш WIP назад, что бы ни случилось.
     if (stashed) {
       try {
-        git("checkout master");
-        git("stash pop");
+        git('checkout master');
+        git('stash pop');
       } catch {}
     }
   }
