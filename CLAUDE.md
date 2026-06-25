@@ -54,5 +54,5 @@ npm run test:e2e     # playwright
 ## Links
 
 - Notion: 335002d3-0d68-814c-aa8f-ddfdee3586f3
-- Repo: github.com/workmailan8n-hash/agent-dashboard
+- Repo: github.com/btw-hash/agent-dashboard
 - Live: https://agent-dashboard-ancient-mountain-4835.fly.dev
