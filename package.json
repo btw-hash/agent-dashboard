@@ -27,12 +27,12 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.10",
     "prettier": "^3.4.2",
     "vite": "^8.0.3",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.9"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md,css}": "prettier --write"
