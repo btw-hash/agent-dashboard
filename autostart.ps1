@@ -51,6 +51,27 @@ Start-Process -FilePath 'node' `
 # Give server a couple seconds to bind port before sync starts hammering it
 Start-Sleep -Seconds 3
 
+# Sync only while the cloud copy answers. The Fly machine was stopped on
+# 2026-06-24 to cut cost, and a sync against it logged "fetch failed" every
+# 2 seconds for months. Any HTTP answer counts as up; no answer means skip.
+$remote = ''
+$envLine = Get-Content (Join-Path $root '.env') | Where-Object { $_ -match '^REMOTE_URL=' } | Select-Object -First 1
+if ($envLine) { $remote = ($envLine -replace '^REMOTE_URL=', '').Trim().Trim('"') }
+$cloudUp = $false
+if ($remote) {
+  try {
+    Invoke-WebRequest -Uri $remote -TimeoutSec 5 -UseBasicParsing | Out-Null
+    $cloudUp = $true
+  } catch {
+    if ($_.Exception.Response) { $cloudUp = $true }
+  }
+}
+
+if (-not $cloudUp) {
+  Log "server.js launched; cloud '$remote' not answering - sync skipped"
+  exit 0
+}
+
 # Launch sync-to-cloud.js detached
 Start-Process -FilePath 'node' `
   -ArgumentList 'sync-to-cloud.js' `
