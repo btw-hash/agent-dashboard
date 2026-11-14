@@ -2,6 +2,8 @@
 
 > Real-time visualization of Claude Code AI agents working in a pixel art office. Each agent gets a desk, walks around, takes breaks, plays games, and interacts with 40+ objects across multiple office zones.
 
+<img src="tests/screenshots/new-layout-full.png" alt="Agent Office: twenty agents across desks, lounge and game zones" width="640">
+
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933) ![License](https://img.shields.io/badge/license-ISC-blue) ![WebSocket](https://img.shields.io/badge/transport-WebSocket-brightgreen)
 
 ---
