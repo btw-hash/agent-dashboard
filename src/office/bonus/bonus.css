@@ -1,0 +1,187 @@
+/* The three bonus views: full-screen read-only overlays inside #app. */
+.bx {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  background: #05060d;
+}
+.bx-view {
+  position: absolute;
+  inset: 0;
+  animation: bxiris 0.7s ease-out both;
+}
+@keyframes bxiris {
+  from {
+    clip-path: circle(0% at var(--ox, 50%) var(--oy, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--ox, 50%) var(--oy, 50%));
+  }
+}
+.bx-top {
+  position: absolute;
+  z-index: 8;
+  top: var(--t);
+  left: var(--l);
+  right: var(--r);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.bx-top > * {
+  pointer-events: auto;
+}
+.bx-top .btn {
+  background: var(--glass);
+  border-color: var(--border-hi);
+  color: var(--text-hi);
+}
+.bx-top .btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #07081a;
+}
+.bx-cams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bx-cap {
+  font-family: var(--pixel);
+  font-size: 9px;
+  color: var(--text-hi);
+  background: var(--glass);
+  padding: 8px 10px 6px;
+  border: 1px solid var(--border);
+}
+
+.bx-vterm {
+  background: radial-gradient(ellipse at center, #07110b 0%, #04060a 70%, #020304 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+.bx-vterm::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, 0.2) 2px 3px);
+}
+.bx-term {
+  margin: auto;
+  color: #6fae5a;
+  font: 12px/1.25 var(--font);
+  white-space: pre;
+  padding: 56px 12px 12px;
+  text-shadow: 0 0 6px rgba(111, 174, 90, 0.5);
+}
+.bx-term b {
+  font-weight: 700;
+}
+.bx-term .w {
+  color: #c5f08f;
+}
+.bx-term .t {
+  color: #d8c2ff;
+}
+.bx-term .i {
+  color: #8b90a8;
+}
+.bx-term .d {
+  color: #2f5a3a;
+  font-weight: 400;
+}
+.bx-term .k {
+  color: #9ece6a;
+  font-weight: 400;
+}
+.bx-term .c {
+  color: #ffb347;
+}
+.bx-term .h {
+  color: #e4ecff;
+}
+
+.bx-vnight {
+  background: #0b1030;
+}
+.bx-night {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+  touch-action: manipulation;
+}
+
+.bx-vmini {
+  background: linear-gradient(#bfe0f7, #f3e7d3 70%);
+}
+.bx-host {
+  position: absolute;
+  inset: 0;
+}
+.bx-gl {
+  display: block;
+}
+.bx-print {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  background: #0b0d1e;
+  color: var(--text-hi);
+}
+.bx-print b {
+  font-family: var(--pixel);
+  font-size: 11px;
+  font-weight: 400;
+  text-align: center;
+  padding: 0 12px;
+  line-height: 1.6;
+}
+.bx-bar {
+  width: min(320px, 70%);
+  height: 12px;
+  border: 2px solid #39d3ff;
+  padding: 2px;
+}
+.bx-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #39d3ff;
+  animation: bxfill 1.5s linear forwards;
+}
+@keyframes bxfill {
+  to {
+    width: 100%;
+  }
+}
+
+@media (pointer: coarse) {
+  .bx-top .btn {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+}
+@media (max-width: 760px) {
+  .bx-term {
+    padding-top: 90px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bx-view {
+    animation: none;
+  }
+}

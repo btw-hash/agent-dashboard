@@ -40,18 +40,18 @@ agent-dashboard/
 Each discovered session is stored in an in-memory `agents` object keyed by session
 ID. Each agent record carries:
 
-| Field            | Description                                      |
-|------------------|--------------------------------------------------|
-| `id`             | Session or subagent UUID                         |
-| `slug`           | Short human-readable label (from JSONL or meta)  |
-| `cwd`            | Working directory of the agent                   |
-| `status`         | `idle` / `thinking` / `working`                  |
-| `currentTool`    | Name of the tool currently in use                |
-| `currentToolLabel` | Localised (Russian) display label for the tool |
-| `toolHistory`    | Last 5 tools used (most-recent first)            |
-| `messageCount`   | Total assistant messages seen                    |
-| `isSubagent`     | Boolean — true if file is in a `subagents/` dir  |
-| `agentType`      | Read from `.meta.json` sidecar file              |
+| Field              | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| `id`               | Session or subagent UUID                        |
+| `slug`             | Short human-readable label (from JSONL or meta) |
+| `cwd`              | Working directory of the agent                  |
+| `status`           | `idle` / `thinking` / `working`                 |
+| `currentTool`      | Name of the tool currently in use               |
+| `currentToolLabel` | Localised (Russian) display label for the tool  |
+| `toolHistory`      | Last 5 tools used (most-recent first)           |
+| `messageCount`     | Total assistant messages seen                   |
+| `isSubagent`       | Boolean — true if file is in a `subagents/` dir |
+| `agentType`        | Read from `.meta.json` sidecar file             |
 
 ### JSONL parsing (`parseNewLines`)
 
@@ -116,6 +116,7 @@ chokidar
 ### Inactivity / cleanup timer
 
 A `setInterval` runs every 5 seconds:
+
 - Marks any agent as `idle` if its last activity was more than 90 seconds ago.
 - Deletes `general-purpose` subagents idle for more than 1 hour.
 
@@ -145,6 +146,7 @@ The `<canvas id="office">` element (920×440 px) renders a pixel-art isometric
 office using the browser 2D canvas API.
 
 Key constants:
+
 - `TW = 72, TH = 36` — tile pixel dimensions
 - `GW = 9, GH = 7` — grid size in tiles
 - `WALL_H = 88` — wall height in pixels
@@ -152,6 +154,7 @@ Key constants:
 
 The `iso(tx, ty)` function converts isometric grid coordinates to screen
 coordinates using the standard formula:
+
 ```
 screenX = OX + (tx - ty) * TW/2
 screenY = OY + (tx + ty) * TH/2
@@ -163,10 +166,10 @@ canvas on each animation frame, avoiding redundant redraws of static geometry.
 
 ### Layout
 
-| Furniture | Position          | Capacity       |
-|-----------|-------------------|----------------|
-| Couches   | Left wall (tx=0)  | 6 lying slots  |
-| Desks     | Back-right area   | 4 sitting slots |
+| Furniture | Position         | Capacity        |
+| --------- | ---------------- | --------------- |
+| Couches   | Left wall (tx=0) | 6 lying slots   |
+| Desks     | Back-right area  | 4 sitting slots |
 
 Slot arrays (`COUCH_SLOTS`, `DESK_SLOTS`) are pre-defined isometric positions
 where agent characters are placed.
@@ -181,6 +184,7 @@ are shown lying on couches.
 ### Card grid
 
 Below the canvas, a CSS grid (`#grid`) renders one `.card` per agent showing:
+
 - Agent name/slug (uppercase, truncated)
 - Current status, tool label, and last text snippet
 - A CSS scan-line animation bar (blue for `working`, purple for `thinking`)
@@ -199,6 +203,7 @@ const ws = new WebSocket(`${proto}//${location.host}`);
 - On disconnect, the LED indicator turns red and reconnects after 3 seconds.
 
 WebSocket is used in two places within the project source files:
+
 - `server.js` line 5: `const { WebSocketServer } = require("ws")`
 - `server.js` lines 17–18, 218–225: server-side client management
 - `public/index.html` line 831: `const ws = new WebSocket(...)` — browser client

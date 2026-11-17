@@ -4,7 +4,6 @@ ENV HUSKY=0
 COPY package*.json vite.config.js ./
 RUN npm ci --ignore-scripts
 COPY src ./src
-COPY public ./public
 RUN npm run build
 
 FROM node:20-slim

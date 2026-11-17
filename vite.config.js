@@ -13,6 +13,11 @@ export default defineConfig({
         target: 'http://localhost:3737',
         changeOrigin: true,
       },
+      // the office server only lets its own page listen in, so the Host header must stay ours
+      '/ws': {
+        target: 'ws://localhost:3737',
+        ws: true,
+      },
     },
   },
 });

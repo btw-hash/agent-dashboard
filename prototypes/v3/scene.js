@@ -1,0 +1,2428 @@
+// ── v3 scene: one floor, five rooms, on a 640x360 grid ──────────
+const stage = $('#stage'),
+  cv = $('#cv'),
+  ctx = cv.getContext('2d'),
+  tagsEl = $('#tags');
+const base = mk(LW, LH),
+  g = base.getContext('2d'),
+  lm = mk(LW, LH),
+  lg = lm.getContext('2d'),
+  bgc = mk(LW, LH);
+const SLACK = 0.012;
+const WALL = 46,
+  MID = 206,
+  RWALL = 240,
+  FEND = 356,
+  DW = 26;
+// the rooms differ in width on purpose: the cafe is where people gather, the gym is a corner
+const ROOMS = [
+  {
+    id: 'games',
+    name: 'GAMES',
+    x0: 3,
+    x1: 150,
+    door: 70,
+    wall: '#33265e',
+    wallL: '#4b3a86',
+    fc: '#2b2f52',
+    accent: '#ff4fd8',
+  },
+  {
+    id: 'gym',
+    name: 'GYM',
+    x0: 153,
+    x1: 270,
+    door: 212,
+    wall: '#35566b',
+    wallL: '#4f7a94',
+    fc: '#46536a',
+    accent: '#9ece6a',
+  },
+  {
+    id: 'lounge',
+    name: 'LOUNGE',
+    x0: 273,
+    x1: 430,
+    door: 352,
+    wall: '#4a1f33',
+    wallL: '#74344f',
+    fc: '#5a2238',
+    accent: '#e0af68',
+  },
+  {
+    id: 'cafe',
+    name: 'CAFE',
+    x0: 433,
+    x1: 637,
+    door: 520,
+    wall: '#2f5d5a',
+    wallL: '#458783',
+    fc: '#ece5d6',
+    accent: '#39c5cf',
+  },
+];
+const hexA = (h, a) => {
+  const n = parseInt(h.slice(1), 16);
+  return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+};
+
+// ── more furniture, all in the same manner: a front face, a lit top edge, a shaded side ──
+F.server = inked(
+  spr(22, 44, (R) => {
+    slab(R, 0, 0, 22, 44, '#2a2e44');
+    for (let i = 0; i < 6; i++) {
+      R(2, 3 + i * 6, 18, 4, '#161a2c');
+      R(3, 4 + i * 6, 7, 1, '#3d4480');
+    }
+    R(2, 40, 18, 2, '#161a2c');
+  })
+);
+F.printers = inked(
+  spr(48, 30, (R) => {
+    slab(R, 0, 14, 48, 16, '#a8713f');
+    R(0, 26, 48, 4, '#6e4526');
+    R(23, 15, 1, 11, '#6e4526');
+    slab(R, 2, 5, 20, 10, '#c9ccd8');
+    R(5, 3, 14, 3, '#fff');
+    R(4, 11, 16, 2, '#2a2e44');
+    R(18, 7, 2, 2, '#9ece6a');
+    slab(R, 27, 0, 18, 15, '#3a3f5c');
+    R(29, 2, 14, 10, '#11132a');
+    R(29, 12, 14, 1, '#e0af68');
+  })
+);
+F.conf = inked(
+  spr(64, 26, (R) => {
+    slab(R, 0, 0, 64, 16, '#a8713f');
+    R(0, 16, 64, 5, '#6e4526');
+    R(3, 21, 3, 5, '#5e3d24');
+    R(58, 21, 3, 5, '#5e3d24');
+    slab(R, 10, 3, 12, 8, '#c9ccd8');
+    R(11, 4, 10, 5, '#7aa2f7');
+    R(28, 5, 9, 6, '#fff');
+    R(30, 7, 5, 1, '#aab0c8');
+    R(44, 4, 4, 4, '#fff');
+    R(44, 4, 4, 1, '#8a5a34');
+    R(52, 8, 6, 3, '#ffe066');
+  })
+);
+F.scope = inked(
+  spr(20, 32, (R) => {
+    slab(R, 8, 14, 4, 10, '#3a3f5c');
+    R(3, 24, 3, 8, '#3a3f5c');
+    R(9, 24, 3, 8, '#3a3f5c');
+    R(15, 24, 3, 8, '#3a3f5c');
+    slab(R, 4, 22, 13, 3, '#4a5290');
+    slab(R, 1, 11, 8, 6, '#c9ccd8');
+    slab(R, 6, 7, 8, 6, '#dfe3ee');
+    slab(R, 11, 3, 8, 6, '#c9ccd8');
+    R(16, 4, 3, 4, '#7aa2f7');
+    R(1, 12, 2, 4, '#e0af68');
+  })
+);
+F.tv = inked(
+  spr(28, 18, (R) => {
+    slab(R, 0, 0, 28, 18, '#1c2036');
+    R(2, 2, 24, 13, INK);
+  })
+);
+F.status = inked(
+  spr(56, 24, (R) => {
+    slab(R, 0, 0, 56, 24, '#1c2036');
+    R(2, 2, 52, 20, '#0b1022');
+  })
+);
+F.lift = inked(
+  spr(38, 40, (R) => {
+    slab(R, 0, 0, 38, 40, '#8b90a8');
+    R(3, 8, 32, 32, '#5d6480');
+    slab(R, 4, 9, 15, 31, '#c9ccd8');
+    slab(R, 19, 9, 15, 31, '#c9ccd8');
+    R(18, 9, 2, 31, '#3a3f5c');
+    R(11, 1, 16, 6, INK);
+  })
+);
+F.coat = inked(
+  spr(14, 34, (R) => {
+    slab(R, 6, 2, 2, 28, '#6e4526');
+    slab(R, 2, 30, 10, 3, '#5e3d24');
+    R(2, 3, 10, 2, '#6e4526');
+    slab(R, 0, 5, 6, 13, '#d9785f');
+    slab(R, 8, 5, 6, 10, '#3b5bdb');
+    R(9, 15, 4, 4, '#3b5bdb');
+    slab(R, 9, 22, 5, 9, '#3a3f5c');
+    R(10, 18, 1, 5, '#e03131');
+    R(12, 17, 1, 6, '#ffd23f');
+  })
+);
+F.flamp = inked(
+  spr(12, 34, (R) => {
+    slab(R, 1, 0, 10, 8, '#ffe2a8');
+    R(2, 7, 8, 1, '#e0af68');
+    slab(R, 5, 8, 2, 22, '#8b90a8');
+    slab(R, 2, 30, 8, 3, '#3a3f5c');
+  })
+);
+F.shelf = inked(
+  spr(26, 34, (R) => {
+    slab(R, 0, 0, 26, 34, '#8a5a34');
+    [3, 13, 23].forEach((y, r) => {
+      R(2, y, 22, 8, '#3b2a1e');
+      for (let i = 0; i < 7; i++)
+        R(
+          3 + i * 3,
+          y + 1 + ((i + r) % 3 ? 0 : 2),
+          2,
+          7 - ((i + r) % 3 ? 0 : 2),
+          ['#f7768e', '#7aa2f7', '#ffd23f', '#9ece6a', '#bb9af7', '#ff9e64', '#39c5cf'][
+            (i + r * 2) % 7
+          ]
+        );
+    });
+  })
+);
+F.gsofa = inked(
+  spr(52, 26, (R) => {
+    const c = '#7b4bd6';
+    slab(R, 3, 0, 46, 18, c);
+    R(5, 3, 42, 1, tone(c, 0.2));
+    R(26, 1, 1, 16, tone(c, -0.2));
+    slab(R, 0, 6, 6, 18, tone(c, -0.12));
+    slab(R, 46, 6, 6, 18, tone(c, -0.12));
+    R(5, 18, 42, 5, tone(c, -0.28));
+    R(4, 23, 3, 3, SHOE);
+    R(45, 23, 3, 3, SHOE);
+  })
+);
+F.arcade2 = inked(
+  spr(22, 40, (R) => {
+    const c = '#1f6f78';
+    slab(R, 1, 6, 20, 34, c);
+    slab(R, 0, 0, 22, 8, '#ffd23f');
+    R(3, 2, 16, 3, '#fff6c8');
+    R(4, 3, 3, 1, '#e03131');
+    R(9, 3, 2, 1, '#e03131');
+    R(13, 3, 5, 1, '#e03131');
+    R(3, 10, 16, 13, INK);
+    slab(R, 1, 24, 20, 6, tone(c, 0.25));
+    R(5, 25, 2, 3, '#ff4b4b');
+    R(11, 26, 2, 2, '#7cff6b');
+    R(15, 26, 2, 2, '#ff4fd8');
+    R(8, 33, 6, 5, tone(c, -0.3));
+    R(10, 34, 2, 2, '#e0af68');
+  })
+);
+F.low = inked(
+  spr(30, 12, (R) => {
+    slab(R, 0, 0, 30, 7, '#6e4526');
+    R(2, 7, 3, 5, '#5e3d24');
+    R(25, 7, 3, 5, '#5e3d24');
+    slab(R, 9, 1, 12, 5, '#3b5bdb');
+    for (let i = 0; i < 4; i++) R(10 + i * 3, 2, 2, 1, i % 2 ? '#ffd23f' : '#e03131');
+    for (let i = 0; i < 4; i++) R(10 + i * 3, 4, 2, 1, i % 2 ? '#e03131' : '#ffd23f');
+  })
+);
+F.foos = inked(
+  spr(44, 28, (R) => {
+    slab(R, 0, 4, 44, 18, '#8a5a34');
+    R(3, 7, 38, 12, '#2f9e44');
+    R(21, 7, 2, 12, '#e9ffe9');
+    [8, 17, 26, 35].forEach((x, i) => {
+      R(x, 1, 1, 24, '#c9ccd8');
+      R(x - 1, 0, 3, 2, '#23263a');
+      R(x - 1, 10 + (i % 2) * 4, 3, 3, i % 2 ? '#3b5bdb' : '#e03131');
+    });
+    R(3, 22, 3, 6, '#5e3d24');
+    R(38, 22, 3, 6, '#5e3d24');
+  })
+);
+F.darts = inked(
+  spr(18, 36, (R) => {
+    slab(R, 0, 0, 18, 36, '#3b2a1e');
+    slab(R, 2, 2, 14, 14, '#161a2c');
+    R(4, 4, 10, 10, '#f2ede2');
+    R(6, 6, 6, 6, '#e03131');
+    R(8, 8, 2, 2, '#ffd23f');
+    slab(R, 2, 19, 14, 6, '#5e3d24');
+    R(4, 21, 3, 2, '#ff4b4b');
+    R(9, 21, 5, 2, '#7cff6b');
+    R(3, 28, 12, 5, '#161a2c');
+  })
+);
+F.bean = inked(
+  spr(46, 16, (R) => {
+    const c = '#e06c9f';
+    R(4, 2, 38, 14, c);
+    R(0, 6, 46, 10, c);
+    R(6, 3, 30, 2, tone(c, 0.25));
+    R(0, 14, 46, 2, tone(c, -0.25));
+    R(20, 6, 1, 8, tone(c, -0.15));
+  })
+);
+F.tread = inked(
+  spr(34, 32, (R) => {
+    slab(R, 0, 22, 28, 7, '#2a2e44');
+    R(2, 23, 24, 2, '#4a5290');
+    R(1, 29, 4, 3, SHOE);
+    R(23, 29, 4, 3, SHOE);
+    slab(R, 26, 6, 5, 18, '#8b90a8');
+    slab(R, 21, 0, 13, 8, '#3a3f5c');
+    R(23, 2, 6, 3, '#9ece6a');
+    R(30, 2, 2, 3, '#ff4b4b');
+    slab(R, 14, 12, 13, 3, '#c9ccd8');
+  })
+);
+F.bagstand = inked(
+  spr(22, 42, (R) => {
+    slab(R, 0, 38, 18, 4, '#3a3f5c');
+    slab(R, 2, 0, 4, 38, '#8b90a8');
+    slab(R, 2, 0, 18, 4, '#8b90a8');
+    R(15, 4, 2, 5, '#c9ccd8');
+    slab(R, 10, 9, 12, 24, '#c0392b');
+    R(10, 15, 12, 2, '#8f2a20');
+    R(10, 25, 12, 2, '#8f2a20');
+    R(13, 10, 3, 4, '#e0584b');
+  })
+);
+F.rack = inked(
+  spr(34, 24, (R) => {
+    slab(R, 0, 4, 3, 20, '#3a3f5c');
+    slab(R, 31, 4, 3, 20, '#3a3f5c');
+    slab(R, 0, 9, 34, 4, '#4a5290');
+    slab(R, 0, 18, 34, 4, '#4a5290');
+    [
+      ['#23263a', 4],
+      ['#e03131', 14],
+      ['#3b5bdb', 24],
+    ].forEach((d) => {
+      slab(R, d[1], 3, 7, 6, d[0]);
+      R(d[1] + 2, 5, 3, 2, '#c9ccd8');
+      slab(R, d[1], 13, 7, 5, d[0]);
+    });
+  })
+);
+F.kettle = inked(
+  spr(18, 10, (R) => {
+    [0, 10].forEach((x, i) => {
+      R(x + 2, 0, 4, 2, '#3a3f5c');
+      R(x + 1, 1, 1, 3, '#3a3f5c');
+      R(x + 6, 1, 1, 3, '#3a3f5c');
+      slab(R, x, 3, 8, 7, i ? '#e03131' : '#23263a');
+    });
+  })
+);
+F.mats = inked(
+  spr(14, 18, (R) => {
+    slab(R, 0, 2, 5, 16, '#7b4bd6');
+    slab(R, 5, 0, 5, 18, '#39c5cf');
+    slab(R, 10, 4, 4, 14, '#f7768e');
+    R(1, 3, 3, 1, '#fff');
+    R(6, 1, 3, 1, '#fff');
+  })
+);
+F.mirror = inked(
+  spr(38, 20, (R) => {
+    slab(R, 0, 0, 38, 20, '#aab0c8');
+    R(2, 2, 34, 16, '#bfe3f2');
+    R(6, 4, 3, 10, '#e6f6fb');
+    R(12, 4, 1, 10, '#e6f6fb');
+    R(24, 6, 8, 1, '#e6f6fb');
+  })
+);
+F.hoop = inked(
+  spr(18, 18, (R) => {
+    slab(R, 0, 0, 18, 12, '#f2ede2');
+    R(5, 3, 8, 1, '#e03131');
+    R(5, 3, 1, 6, '#e03131');
+    R(12, 3, 1, 6, '#e03131');
+    R(5, 8, 8, 1, '#e03131');
+    R(4, 12, 10, 2, '#ff8a3d');
+    for (let i = 0; i < 4; i++) R(5 + i * 2, 14, 1, 4, '#fff');
+  })
+);
+F.pong = inked(
+  spr(44, 24, (R) => {
+    slab(R, 0, 0, 44, 14, '#2f7a47');
+    R(21, 0, 2, 14, '#fff');
+    R(0, 6, 44, 1, '#e9ffe9');
+    R(0, 14, 44, 3, '#1f5a33');
+    R(4, 17, 3, 7, '#3a3f5c');
+    R(37, 17, 3, 7, '#3a3f5c');
+    R(8, 3, 5, 3, '#e03131');
+    R(32, 9, 5, 3, '#3b5bdb');
+  })
+);
+F.cards = inked(
+  spr(42, 24, (R) => {
+    slab(R, 0, 0, 42, 13, '#6e4526');
+    R(2, 2, 38, 9, '#2f7a47');
+    R(2, 2, 38, 1, '#3f9b5b');
+    R(8, 4, 3, 5, '#fff');
+    R(12, 4, 3, 5, '#fff');
+    R(16, 4, 3, 5, '#e03131');
+    R(24, 5, 3, 2, '#e03131');
+    R(28, 6, 3, 2, '#ffd23f');
+    R(33, 4, 3, 2, '#3b5bdb');
+    R(0, 13, 42, 4, '#4a2d18');
+    R(3, 17, 3, 7, '#3b2a1e');
+    R(36, 17, 3, 7, '#3b2a1e');
+  })
+);
+F.bj = inked(
+  spr(34, 20, (R) => {
+    slab(R, 0, 0, 34, 11, '#6e4526');
+    R(2, 2, 30, 7, '#2b6d74');
+    R(2, 2, 30, 1, '#3f8f97');
+    R(6, 3, 3, 5, '#fff');
+    R(15, 3, 3, 5, '#fff');
+    R(24, 3, 3, 5, '#fff');
+    R(11, 5, 2, 2, '#ffd23f');
+    R(0, 11, 34, 3, '#4a2d18');
+    R(3, 14, 3, 6, '#3b2a1e');
+    R(28, 14, 3, 6, '#3b2a1e');
+  })
+);
+F.wheel = inked(
+  spr(22, 36, (R) => {
+    slab(R, 9, 18, 4, 14, '#6e4526');
+    slab(R, 4, 32, 14, 4, '#5e3d24');
+    R(5, 1, 12, 20, '#3b2a1e');
+    R(1, 5, 20, 12, '#3b2a1e');
+    R(3, 3, 16, 16, '#3b2a1e');
+    R(5, 3, 6, 8, '#e03131');
+    R(11, 3, 6, 8, '#ffd23f');
+    R(5, 11, 6, 8, '#3b5bdb');
+    R(11, 11, 6, 8, '#2f9e44');
+    R(3, 7, 2, 8, '#f7768e');
+    R(17, 7, 2, 8, '#bb9af7');
+    R(9, 9, 4, 4, '#f2ede2');
+    R(10, 0, 2, 3, '#fff');
+  })
+);
+F.slot = inked(
+  spr(20, 38, (R) => {
+    slab(R, 0, 7, 20, 31, '#c0392b');
+    slab(R, 2, 0, 16, 8, '#ffd23f');
+    R(5, 3, 10, 2, '#c0392b');
+    R(3, 11, 14, 9, INK);
+    R(17, 13, 2, 9, '#c9ccd8');
+    R(16, 11, 4, 3, '#e03131');
+    slab(R, 4, 25, 12, 5, '#2a2e44');
+    R(3, 33, 14, 2, '#8f2a20');
+  })
+);
+F.juke = inked(
+  spr(22, 38, (R) => {
+    const w = '#8a5a34';
+    R(3, 0, 16, 5, w);
+    slab(R, 1, 4, 20, 34, w);
+    R(4, 6, 14, 12, INK);
+    R(4, 21, 14, 11, '#3b2a1e');
+    for (let i = 0; i < 5; i++) R(5, 22 + i * 2, 12, 1, '#5e3d24');
+    R(1, 6, 2, 27, '#ff4fd8');
+    R(19, 6, 2, 27, '#ff4fd8');
+    R(8, 34, 6, 2, '#e0af68');
+  })
+);
+F.crystal = inked(
+  spr(18, 24, (R) => {
+    slab(R, 0, 13, 18, 4, '#5c4a8a');
+    slab(R, 2, 17, 14, 7, '#3a2e55');
+    R(6, 3, 6, 9, '#bb9af7');
+    R(5, 5, 8, 6, '#bb9af7');
+    R(7, 4, 2, 2, '#fff');
+    slab(R, 5, 11, 8, 2, '#e0af68');
+  })
+);
+F.vend = inked(
+  spr(22, 40, (R) => {
+    slab(R, 0, 0, 22, 40, '#3b5bdb');
+    R(2, 3, 13, 24, '#11132a');
+    for (let r = 0; r < 4; r++)
+      for (let i = 0; i < 4; i++)
+        R(
+          3 + i * 3,
+          5 + r * 6,
+          2,
+          3,
+          ['#f7768e', '#ffd23f', '#9ece6a', '#39d3ff', '#ff9e64'][(r * 3 + i) % 5]
+        );
+    for (let r = 0; r < 4; r++) R(2, 9 + r * 6, 13, 1, '#2a2e44');
+    R(17, 7, 3, 9, '#c9ccd8');
+    R(17, 19, 3, 2, '#ffd23f');
+    R(3, 31, 12, 5, INK);
+  })
+);
+F.gum = inked(
+  spr(12, 26, (R) => {
+    R(2, 0, 8, 10, '#bfe3f2');
+    R(1, 2, 10, 6, '#bfe3f2');
+    [
+      ['#e03131', 3, 3],
+      ['#ffd23f', 6, 2],
+      ['#3b5bdb', 7, 5],
+      ['#2f9e44', 3, 6],
+      ['#ff4fd8', 5, 7],
+    ].forEach((d) => R(d[1], d[2], 2, 2, d[0]));
+    slab(R, 2, 10, 8, 6, '#e03131');
+    R(5, 12, 2, 2, '#c9ccd8');
+    slab(R, 5, 16, 2, 7, '#8b90a8');
+    slab(R, 2, 23, 8, 3, '#3a3f5c');
+  })
+);
+F.ctable = inked(
+  spr(24, 18, (R) => {
+    const c = '#e3c9a0';
+    R(3, 0, 18, 10, c);
+    R(0, 2, 24, 6, c);
+    R(3, 0, 18, 1, '#f6e6c8');
+    R(0, 7, 24, 1, '#b89a6c');
+    R(3, 9, 18, 1, '#b89a6c');
+    slab(R, 10, 10, 4, 6, '#6e4526');
+    slab(R, 6, 16, 12, 2, '#5e3d24');
+    R(15, 2, 4, 4, '#fff');
+    R(15, 2, 4, 1, '#8a5a34');
+    R(5, 3, 5, 3, '#f29b9b');
+  })
+);
+F.stool = inked(
+  spr(10, 10, (R) => {
+    slab(R, 1, 0, 8, 4, '#d9785f');
+    R(2, 4, 2, 6, '#5e3d24');
+    R(6, 4, 2, 6, '#5e3d24');
+  })
+);
+F.espresso = inked(
+  spr(16, 16, (R) => {
+    slab(R, 0, 0, 16, 16, '#c9ccd8');
+    R(2, 2, 12, 4, '#2a2e44');
+    R(3, 3, 3, 2, '#9ece6a');
+    R(4, 8, 8, 7, INK);
+    R(6, 11, 4, 4, '#fff');
+    R(6, 11, 4, 1, '#8a5a34');
+  })
+);
+F.menu = inked(
+  spr(30, 16, (R) => {
+    slab(R, 0, 0, 30, 16, '#6e4526');
+    R(2, 2, 26, 12, '#1f3d2e');
+    R(4, 4, 10, 1, '#f2ede2');
+    R(4, 7, 14, 1, '#c9d8c0');
+    R(4, 10, 8, 1, '#c9d8c0');
+    R(21, 4, 5, 1, '#ffd23f');
+    R(22, 7, 4, 1, '#ffd23f');
+    R(20, 10, 6, 1, '#ffd23f');
+  })
+);
+F.cork = inked(
+  spr(30, 20, (R) => {
+    slab(R, 0, 0, 30, 20, '#b98450');
+    [
+      ['#ffe066', 3, 3],
+      ['#9ee6ff', 10, 2],
+      ['#ff9ecb', 18, 4],
+      ['#b6f09c', 5, 11],
+      ['#fff', 13, 10],
+      ['#ffe066', 22, 12],
+    ].forEach((d) => {
+      R(d[1], d[2], 5, 5, d[0]);
+      R(d[1] + 2, d[2], 1, 1, '#e03131');
+    });
+  })
+);
+F.trophy = inked(
+  spr(26, 16, (R) => {
+    slab(R, 0, 12, 26, 4, '#8a5a34');
+    R(3, 5, 5, 5, '#ffd23f');
+    R(4, 10, 3, 2, '#b8901f');
+    R(11, 2, 6, 7, '#ffd23f');
+    R(13, 9, 2, 3, '#b8901f');
+    R(12, 3, 2, 2, '#fff6c8');
+    R(20, 6, 4, 4, '#c9ccd8');
+    R(21, 10, 2, 2, '#8b90a8');
+  })
+);
+F.days = inked(
+  spr(38, 16, (R) => {
+    slab(R, 0, 0, 38, 16, '#2a2e44');
+    R(2, 2, 34, 12, '#11132a');
+  })
+);
+F.catbed = inked(
+  spr(18, 8, (R) => {
+    R(0, 2, 18, 6, '#d9785f');
+    R(2, 0, 14, 6, '#f29b9b');
+    R(3, 1, 12, 1, '#ffc4c4');
+  })
+);
+
+// ── navigation: lanes that stay clear of furniture ──────────────
+const NODE = {
+  uA: [66, 84],
+  u1: [112, 84],
+  uW: [186, 84],
+  u2: [240, 84],
+  u3: [370, 84],
+  u4: [490, 84],
+  uL: [557, 84],
+  uB: [600, 84],
+  p0: [34, 134],
+  l0: [34, 188],
+  lG: [70, 188],
+  l1: [112, 188],
+  lY: [212, 188],
+  l2: [240, 188],
+  lN: [352, 188],
+  l3: [370, 188],
+  l4: [490, 188],
+  lC: [520, 188],
+  l5: [612, 188],
+  gIn: [70, 250],
+  gC: [70, 284],
+  gW: [30, 284],
+  gS: [122, 284],
+  yIn: [212, 250],
+  yC: [212, 300],
+  yW: [176, 300],
+  yE: [236, 300],
+  yB: [222, 336],
+  nIn: [352, 250],
+  nC: [352, 284],
+  nW: [318, 272],
+  nE: [384, 274],
+  nB: [352, 322],
+  cIn: [520, 250],
+  cC: [520, 286],
+  cE: [576, 274],
+  cV: [476, 274],
+};
+const EDGE =
+  'uA-u1 u1-uW uW-u2 u2-u3 u3-u4 u4-uL uL-uB u1-l1 u2-l2 u3-l3 u4-l4 p0-l0 l0-lG lG-l1 l1-lY lY-l2 l2-lN lN-l3 l3-l4 l4-lC lC-l5 lG-gIn lY-yIn lN-nIn lC-cIn gIn-gC gC-gW gC-gS yIn-yC yC-yW yC-yE yC-yB nIn-nC nC-nW nC-nE nC-nB cIn-cC cC-cE cC-cV'
+    .split(' ')
+    .map((e) => e.split('-'));
+const ADJ = {};
+EDGE.forEach(([a, b]) => {
+  (ADJ[a] = ADJ[a] || []).push(b);
+  (ADJ[b] = ADJ[b] || []).push(a);
+});
+function bfs(a, b) {
+  const prev = { [a]: null },
+    q = [a];
+  while (q.length) {
+    const n = q.shift();
+    if (n === b) break;
+    for (const m of ADJ[n])
+      if (!(m in prev)) {
+        prev[m] = n;
+        q.push(m);
+      }
+  }
+  const out = [];
+  for (let n = b; n; n = prev[n]) out.unshift(n);
+  return out;
+}
+// a place where someone does something: [node, x, y, pose, dir, seated, seconds, sort offset]
+const SPOT = {
+  board: ['uW', 184, 60, 'board', 1, 0, 7],
+  server: ['uA', 66, 80, 'type', 1, 0, 6],
+  printer: ['p0', 30, 130, 'idle', 1, 0, 4],
+  plant: ['l0', 32, 198, 'idle', 3, 0, 4],
+  scope: ['uB', 600, 82, 'idle', 1, 0, 6],
+  tank: ['u1', 104, 78, 'idle', 1, 0, 5],
+  arcA: ['gW', 17, 268, 'type', 1, 0, 8],
+  arcB: ['gW', 41, 268, 'type', 1, 0, 8],
+  sofaL: ['gS', 110, 306, 'idle', 1, 1, 9],
+  sofaR: ['gS', 134, 306, 'idle', 1, 1, 9],
+  foos: ['gW', 32, 302, 'type', 0, 0, 7],
+  tread: ['yW', 172, 290, 'walk', 2, 0, 10, 6],
+  bag: ['yE', 236, 296, 'idle', 2, 0, 6],
+  lift: ['yB', 222, 340, 'lift', 0, 0, 8],
+  juke: ['nW', 291, 267, 'idle', 1, 0, 5],
+  slot: ['nW', 316, 267, 'type', 1, 0, 6],
+  poker: ['nE', 388, 288, 'think', 0, 1, 10],
+  roul: ['nC', 310, 298, 'idle', 0, 0, 7],
+  crystal: ['nE', 364, 268, 'idle', 2, 0, 5],
+  bj: ['nB', 380, 328, 'idle', 0, 0, 7],
+  esp: ['cE', 576, 270, 'idle', 1, 0, 4],
+  sipA: ['cV', 458, 296, 'sip', 0, 1, 9],
+  sipB: ['cC', 512, 318, 'sip', 0, 1, 8],
+  sipC: ['cE', 602, 300, 'sip', 0, 1, 8],
+  vend: ['cV', 477, 267, 'idle', 1, 0, 4],
+};
+// the 18 games and the object each one opens from: [name, room, marker x, marker y]
+const GAMES = [
+  ['Memory match', 'Hall', 177, 22],
+  ['Typing test', 'Hall', 411, 134],
+  ['Plant care', 'Hall', 13, 186],
+  ['Coffee machine', 'Cafe', 576, 232],
+  ['Jukebox rhythm', 'Lounge', 291, 236],
+  ['Crystal ball', 'Lounge', 383, 246],
+  ['Poker', 'Lounge', 395, 300],
+  ['Roulette', 'Lounge', 309, 312],
+  ['Blackjack', 'Lounge', 381, 338],
+  ['Slot machine', 'Lounge', 316, 236],
+  ['Foosball', 'Games room', 32, 318],
+  ['Minesweeper', 'Games room', 17, 236],
+  ['Tic-tac-toe', 'Games room', 41, 236],
+  ['Connect 4', 'Games room', 121, 266],
+  ['Darts', 'Games room', 135, 330],
+  ['Reaction test', 'Gym', 256, 268],
+  ['Snake', 'Games room', 132, 211],
+  ['Ping-pong', 'Gym', 182, 326],
+].map((a, i) => ({ kind: 'game', n: i + 1, name: a[0], room: a[1], x: a[2], y: a[3] }));
+// objects that lead somewhere else (the bonus views)
+const DOORS = [
+  { kind: 'door', id: 'terminal', name: 'Server rack', x: 66, y: 52, r: [54, 30, 24, 44] },
+  { kind: 'door', id: 'night', name: 'Telescope', x: 618, y: 62, r: [607, 47, 22, 34] },
+  { kind: 'door', id: 'mini', name: '3D printer', x: 42, y: 102, r: [32, 93, 20, 17] },
+];
+
+// ── cast ────────────────────────────────────────────────────────
+const SK = ['#f1c9a5', '#8d5a3b', '#f6d7b8', '#c98a5e', '#6b4630'],
+  HR = [
+    '#5a3d2a',
+    '#23263a',
+    '#d9a441',
+    '#7b4bd6',
+    '#e8e2d4',
+    '#b5532a',
+    '#f7768e',
+    '#3f9b5b',
+    '#2a1d14',
+  ],
+  SH = [
+    '#f7768e',
+    '#9ece6a',
+    '#7aa2f7',
+    '#e0af68',
+    '#5c4a8a',
+    '#39c5cf',
+    '#ff9e64',
+    '#e06c9f',
+    '#5fae8f',
+    '#ffd23f',
+    '#c0caf5',
+    '#d9785f',
+  ],
+  STY = ['fringe', 'short', 'bun', 'short', 'long', 'spiky'],
+  ACC = ['glasses', 'phones', '', 'cap', '', ''],
+  FIT = ['tie', 'hood', 'stripe', 'tee', 'suit', ''];
+const ROLES = [
+  'window philosopher',
+  'bug whisperer',
+  'the perfectionist',
+  'terminal native',
+  'keeps the build green',
+  'regex poet',
+  'stack tracer',
+  'runs on a schedule',
+  'reads every diff',
+  'indentation purist',
+  'merge negotiator',
+  'points at nothing',
+  'ends every sentence;',
+  'writes long messages',
+  'the DJ',
+  'draws boxes and arrows',
+  'never skips leg day',
+  'feeling lucky',
+  'high score holder',
+  'professional napper',
+  'intern, a sub-agent',
+];
+const QUOTES = [
+  'It is never the cache. It is the cache.',
+  'It only fails when you look at it.',
+  'It compiles. Ship it.',
+  'Have you tried turning it off and on?',
+  'Green is a lifestyle.',
+  'I can match that.',
+  'It was line 42 all along.',
+  'See you at midnight.',
+  'LGTM, with 14 comments.',
+  'Two spaces. Always.',
+  'We can both be right.',
+  'Works on my machine.',
+  'One more thing;',
+  'fix: actually fix the fix',
+  'One more track.',
+  'Let me draw this.',
+  'Reps before deps.',
+  'This hand is the one.',
+  'Insert coin.',
+  'Zzz.',
+  'On it!',
+];
+const P = [];
+function person(name, o) {
+  const i = P.length,
+    p = Object.assign(
+      {
+        id: 'p' + i,
+        name,
+        role: ROLES[i % ROLES.length],
+        quote: QUOTES[i % QUOTES.length],
+        skin: SK[i % 5],
+        hair: HR[(i * 2 + 1) % 9],
+        shirt: SH[i % 12],
+        pants: ['#2e3350', '#3a2e55', '#23263a'][i % 3],
+        style: STY[i % 6],
+        acc: ACC[(i * 5) % 6],
+        fit: FIT[i % 6],
+        st: 'i',
+        pose: 'idle',
+        dir: 0,
+        dist: 0,
+        coffees: (i * 7) % 6,
+        mood: ['focused', 'chatty', 'sleepy', 'curious', 'proud', 'hungry'][(i * 5) % 6],
+        energy: 35 + ((i * 37) % 60),
+      },
+      o
+    );
+  P.push(p);
+  return p;
+}
+// desks: three clusters of four. F faces us from behind the desk, B is seen from behind
+const CLUSTER = [124, 262, 392],
+  SEATS = [];
+CLUSTER.forEach((X) => {
+  SEATS.push(
+    { x: X + 19, y: 107, seat: 'F', dx: X },
+    { x: X + 65, y: 107, seat: 'F', dx: X + 46 },
+    { x: X + 19, y: 166, seat: 'B', dx: X },
+    { x: X + 65, y: 166, seat: 'B', dx: X + 46 }
+  );
+});
+[
+  [
+    'Bug-Hunt',
+    0,
+    'think',
+    't',
+    { acc: 'glasses', fit: 'tie', emote: { every: 19, at: 15.5, pose: 'palm' } },
+  ],
+  [
+    'Heisen-X',
+    1,
+    'type',
+    'w',
+    { acc: 'phones', fit: 'hood', emote: { every: 13, at: 10.8, pose: 'cheer' } },
+  ],
+  ['Blanky', 2, 'type', 'w', { style: 'bun', fit: 'stripe', skirt: true }],
+  ['Grid-G', 3, 'type', 'w', { acc: 'cap', fit: 'tee', rate: 14 }],
+  ['Lint', 4, 'type', 'w', {}],
+  ['Regex', 6, 'type', 'w', { skirt: true }],
+  ['Stacky', 7, 'type', 'w', { beard: true }],
+  ['Cron', 8, 'think', 't', {}],
+  ['Diff', 9, 'type', 'w', { emote: { every: 23, at: 20.5, pose: 'cheer' } }],
+  ['Yaml', 11, 'type', 'w', {}],
+].forEach((a) => {
+  const s = SEATS[a[1]];
+  s.who = person(
+    a[0],
+    Object.assign(
+      { x: s.x, y: s.y, seat: s.seat, pose: a[2], dir: s.seat === 'F' ? 0 : 1, st: a[3] },
+      a[4]
+    )
+  );
+  s.who.chair = s.who.shirt;
+});
+person('Merge', {
+  x: 526,
+  y: 104,
+  seat: 'F',
+  pose: 'think',
+  st: 't',
+  chair: '#5fae8f',
+  fit: 'suit',
+});
+person('Null-Ptr', {
+  x: 538,
+  y: 152,
+  pose: 'talk',
+  dir: 2,
+  talk: 0,
+  style: 'long',
+  skirt: true,
+  fit: 'tee',
+  acc: '',
+});
+person('Semi-Colon', {
+  x: 557,
+  y: 152,
+  pose: 'talk',
+  dir: 3,
+  talk: 1,
+  beard: true,
+  style: 'short',
+  acc: '',
+});
+[
+  [
+    'Commit-D',
+    ['esp', 'board', 'server', 'sipC'],
+    { style: 'long', acc: 'glasses', fit: 'suit', hair: '#e8e2d4', shirt: '#5c4a8a' },
+  ],
+  ['Blocky', ['juke', 'sofaL', 'arcA', 'roul'], { acc: 'ears', hair: '#f7768e', fit: 'tee' }],
+  ['Arches', ['scope', 'plant', 'printer', 'tank'], { style: 'spiky', beard: true, fit: 'tie' }],
+  ['Reps', ['tread', 'lift', 'vend', 'bag'], { fit: 'tee', acc: '', style: 'short' }],
+  ['Lucky', ['poker', 'slot', 'sipA', 'bj'], { fit: 'suit', acc: 'cap' }],
+  ['Pixel', ['arcB', 'foos', 'sofaR', 'sipB'], { acc: 'phones', fit: 'hood' }],
+].forEach((a, i) => {
+  const s = SPOT[a[1][0]];
+  person(
+    a[0],
+    Object.assign(
+      {
+        roam: true,
+        plan: a[1],
+        pi: 0,
+        x: s[1],
+        y: s[2],
+        route: [],
+        state: 'stay',
+        stay: 2 + i * 1.7,
+        spot: s,
+        node: s[0],
+      },
+      a[2]
+    )
+  );
+  s.busy = true;
+});
+person('Snooze', { x: 86, y: 342, pose: 'sleep', fit: 'tee' });
+const LEAD = P.find((p) => p.name === 'Commit-D'),
+  SUB = person('Sub-1', {
+    x: LEAD.x - 16,
+    y: LEAD.y + 4,
+    intern: true,
+    st: 'w',
+    style: 'spiky',
+    hair: '#3f9b5b',
+    shirt: '#ffd23f',
+    fit: 'tee',
+    acc: '',
+  }),
+  GAP = 16;
+LEAD.trail = [];
+LEAD.mark = 0;
+const dOf = (p) => (p.intern ? DI : D);
+const CAT = {
+  kind: 'cat',
+  name: 'The Cat',
+  role: 'office manager',
+  st: 'i',
+  quote: 'mrrp.',
+  mood: 'in charge',
+  energy: 99,
+  coffees: 0,
+  x: 596,
+  y: 198,
+  dist: 0,
+  i: 0,
+  wait: 4,
+  flip: false,
+  sit: true,
+  path: [
+    [596, 198, 5],
+    [490, 188],
+    [370, 188],
+    [240, 188, 2],
+    [112, 188],
+    [112, 84],
+    [240, 84, 2.5],
+    [490, 84],
+    [490, 188],
+    [596, 198],
+  ],
+};
+const GOOSE = {
+  x: 612,
+  y: 188,
+  dist: 0,
+  i: 0,
+  wait: 0,
+  flip: false,
+  path: [
+    [612, 188, 2],
+    [520, 188],
+    [520, 286, 2.5],
+    [548, 300],
+    [520, 286],
+    [520, 188],
+    [370, 188, 1.5],
+    [520, 188],
+    [612, 188],
+  ],
+};
+
+// ── state the pages read and set ────────────────────────────────
+const ACT = {
+  type: 'typing',
+  think: 'thinking it over',
+  board: 'at the whiteboard',
+  sip: 'coffee break',
+  walk: 'on the move',
+  talk: 'chatting',
+  cheer: 'task done!',
+  palm: 'hit a tool error',
+  lift: 'lifting',
+  sleep: 'asleep',
+  idle: 'taking a breather',
+};
+const Office = {
+  P,
+  ROOMS,
+  GAMES,
+  DOORS,
+  CAT,
+  base,
+  names: 'working',
+  showGames: false,
+  showDoors: false,
+  snap: false,
+  picked: null,
+  hov: null,
+  onPick: null,
+  onFrame: [],
+  // a page can add to the scene: extra(T, dt, put, FX) queues depth-sorted and on-top drawing,
+  // onLight(lg, T, night) edits the light map, glow(T, dt) draws after the light
+  extra: [],
+  glow: [],
+  onLight: null,
+  // 0..1 holds the lift doors that far open; null leaves them on their own timer
+  lift: null,
+  paused: false,
+  setHour(h) {
+    auto = false;
+    hour = h;
+  },
+  setAuto() {
+    auto = true;
+    hour = realHour();
+  },
+  hour: () => hour,
+  night: () => night,
+  clock: () =>
+    String(Math.floor(hour) % 24).padStart(2, '0') +
+    ':' +
+    String(Math.floor((hour % 1) * 60)).padStart(2, '0'),
+  phase: () =>
+    hour < 5.5 ? 'night' : hour < 8.5 ? 'dawn' : hour < 17 ? 'day' : hour < 20.5 ? 'dusk' : 'night',
+  cam: {
+    // 'soft': the scale travels with the pan as one move. 'cut': the scale jumps, only the pan glides
+    mode: 'soft',
+    to(x, y, z, smooth, rate) {
+      if (rate) RATE = rate;
+      else if (z !== ZM) RATE = 3.2;
+      ZM = z;
+      TX = x;
+      TY = y;
+      HOLD = false;
+      aim(!!smooth && this.mode === 'soft');
+      if (!smooth) {
+        CX = x;
+        CY = y;
+        place();
+      } else place(true);
+    },
+    // one step in or out around the screen centre
+    zoom(d) {
+      const z = Math.max(0, Math.min(3, ZM + d));
+      if (z === ZM) return;
+      ZM = z;
+      HOLD = this.mode === 'soft';
+      if (HOLD) RATE = 9;
+      aim(HOLD);
+      place();
+    },
+    // show an area w by h around a point at the largest whole-number scale that fits it
+    frame(x, y, w, h, smooth, rate) {
+      const b = Math.floor(Math.min(vw / LW, vh / LH) + SLACK),
+        s = Math.max(1, Math.min(Math.floor(vw / w), Math.floor(vh / h)));
+      this.to(x, y, Math.max(0, s - (b >= 1 ? b : 0)), smooth, rate);
+    },
+    get z() {
+      return ZM;
+    },
+    get x() {
+      return CX;
+    },
+    get y() {
+      return CY;
+    },
+    get s() {
+      return S;
+    },
+    view: () => [(0 - OX) / S, (0 - OY) / S, vw / S, vh / S],
+  },
+  toScreen: (x, y) => [OX + x * S, OY + y * S],
+  act: (p) => ACT[p.now] || 'on a break',
+  headOf: (p) => [p.x, pipY(p)],
+  start,
+};
+const HEARTS = [],
+  BITS = [];
+let hour = 10,
+  auto = false,
+  night = 0,
+  S = 1,
+  OX = 0,
+  OY = 0,
+  vw = 10,
+  vh = 10,
+  CX = LW / 2,
+  CY = LH / 2,
+  TX = LW / 2,
+  TY = LH / 2,
+  ZM = 0,
+  SB = 1,
+  RATE = 3.2,
+  HOLD = false;
+const realHour = () => {
+  const d = new Date();
+  return d.getHours() + d.getMinutes() / 60;
+};
+const KEY = [
+  [0, [58, 66, 140], '#0b1030'],
+  [5, [64, 70, 146], '#151b48'],
+  [6.8, [255, 176, 138], '#ff9e7a'],
+  [9, [255, 246, 230], '#a4d6ff'],
+  [13, [255, 255, 255], '#8fd0ff'],
+  [17, [255, 234, 200], '#a8d4ff'],
+  [19.3, [255, 156, 112], '#ff8a5c'],
+  [21, [78, 72, 152], '#1a1f55'],
+  [24, [58, 66, 140], '#0b1030'],
+];
+function sky() {
+  let a = KEY[0],
+    b = KEY[1];
+  for (let i = 0; i < KEY.length - 1; i++)
+    if (hour >= KEY[i][0] && hour <= KEY[i + 1][0]) {
+      a = KEY[i];
+      b = KEY[i + 1];
+      break;
+    }
+  const t = (hour - a[0]) / (b[0] - a[0] || 1);
+  const amb = a[1].map((v, i) => v + (b[1][i] - v) * t),
+    pa = parseInt(a[2].slice(1), 16),
+    pb = parseInt(b[2].slice(1), 16),
+    mix = (sh) => (((pa >> sh) & 255) + (((pb >> sh) & 255) - ((pa >> sh) & 255)) * t) | 0;
+  return { amb, sky: 'rgb(' + mix(16) + ',' + mix(8) + ',' + mix(0) + ')' };
+}
+const WINS = [86, 222, 366, 598];
+// light sources: [x, y, colour, radius, strength]. Every pool has a lamp, a screen or a sign under it
+const LIGHTS = [
+  [28, 22, '#ff4fd8', 60, 0.9],
+  [66, 56, '#7cff6b', 36, 0.5],
+  [104, 56, '#39d3ff', 44, 0.7],
+  [300, 20, '#8fd3ff', 46, 0.6],
+  [225, 126, '#ffd39a', 96, 0.85],
+  [557, 60, '#ffe2a8', 60, 0.7],
+  [42, 106, '#39c5cf', 34, 0.5],
+  [166, 118, '#ffe2a8', 70, 0.5],
+  [304, 118, '#ffe2a8', 70, 0.5],
+  [434, 118, '#ffe2a8', 70, 0.5],
+  [540, 112, '#ffe2a8', 74, 0.6],
+  [32, 246, '#39d3ff', 50, 0.85],
+  [134, 224, '#bb9af7', 46, 0.8],
+  [76, 214, '#ff4fd8', 90, 0.5],
+  [212, 236, '#e6f6fb', 110, 0.75],
+  [291, 244, '#ff4fd8', 40, 0.7],
+  [316, 244, '#ffd23f', 34, 0.6],
+  [280, 278, '#ffd39a', 86, 0.9],
+  [383, 250, '#bb9af7', 34, 0.75],
+  [395, 300, '#ffd39a', 60, 0.5],
+  [520, 280, '#ffe2a8', 120, 0.8],
+  [576, 236, '#ffe2a8', 50, 0.5],
+  [477, 244, '#7aa2f7', 38, 0.6],
+];
+
+// ── static background: floors, walls, doors ─────────────────────
+function paintBg() {
+  const x = bgc.getContext('2d'),
+    R = (X, Y, W, H, c) => {
+      if (W > 0 && H > 0) {
+        x.fillStyle = c;
+        x.fillRect(X, Y, W, H);
+      }
+    };
+  const pl = ['#c99d6c', '#c2935f', '#d0a674', '#bf9160'];
+  for (let r = 0; r < (MID - WALL) / 8; r++) {
+    const y = WALL + r * 8,
+      c = pl[(r * 3) % 4];
+    R(0, y, LW, 8, c);
+    R(0, y, LW, 1, tone(c, 0.14));
+    R(0, y + 7, LW, 1, '#8a5a34');
+    for (let i = 0; i < 13; i++) R((i * 61 + r * 37) % LW, y + 1, 1, 6, '#9b6b3e');
+  }
+  R(0, 0, LW, WALL, '#343b6b');
+  R(0, 0, LW, 4, '#4a5290');
+  R(0, 4, LW, 1, '#5d66a8');
+  R(0, 32, LW, 10, '#2e3566');
+  R(0, 32, LW, 1, '#252a54');
+  for (let X = 16; X < LW; X += 32) R(X, 33, 1, 9, '#252a54');
+  R(0, 42, LW, 4, '#232847');
+  R(0, 42, LW, 1, '#3d4480');
+  for (let i = 0; i < 12; i++) R(0, WALL + i, LW, 1, 'rgba(18,19,42,' + (0.26 - i * 0.02) + ')');
+  // rugs: muted, and each one with its own pattern so the clusters do not read as copies
+  const rug = (X, Y, W, H, c, kind) => {
+    R(X, Y, W, H, tone(c, -0.2));
+    R(X + 2, Y + 2, W - 4, H - 4, c);
+    const l = tone(c, 0.16),
+      d = tone(c, -0.1);
+    if (kind === 0) {
+      R(X + 5, Y + 5, W - 10, 1, l);
+      R(X + 5, Y + H - 6, W - 10, 1, l);
+      R(X + 5, Y + 5, 1, H - 10, l);
+      R(X + W - 6, Y + 5, 1, H - 10, l);
+    }
+    if (kind === 1) for (let i = X + 8; i < X + W - 8; i += 8) R(i, Y + 4, 1, H - 8, d);
+    if (kind === 2)
+      for (let yy = Y + 8; yy < Y + H - 6; yy += 10)
+        for (let xx = X + 8 + (((yy - Y) / 10) % 2) * 5; xx < X + W - 8; xx += 10) {
+          R(xx, yy, 2, 2, l);
+        }
+    if (kind === 3) {
+      R(X + 8, Y + 8, W - 16, H - 16, d);
+      R(X + 12, Y + 12, W - 24, H - 24, c);
+      R(X + (W >> 1) - 6, Y + (H >> 1) - 4, 12, 8, l);
+    }
+    for (let i = X + 1; i < X + W; i += 3) {
+      R(i, Y - 1, 1, 1, l);
+      R(i, Y + H, 1, 1, l);
+    }
+  };
+  rug(114, 86, 104, 96, '#4a4a8c', 0);
+  rug(252, 86, 104, 96, '#3f6f72', 1);
+  rug(382, 86, 104, 96, '#7c5468', 2);
+  rug(500, 90, 84, 76, '#46527f', 3);
+  R(546, 48, 26, 10, '#8a3f3f');
+  R(548, 50, 22, 6, '#a85050');
+  text(x, 'HI', 555, 51, '#f6d0d0');
+  ROOMS.forEach((r) => {
+    const w = r.x1 - r.x0,
+      y0 = RWALL,
+      h = FEND - RWALL,
+      X0 = r.x0;
+    R(X0, y0, w, h, r.fc);
+    if (r.id === 'games')
+      for (let ty = 0; ty < h; ty += 16)
+        for (let tx = 0; tx < w; tx += 16) {
+          R(X0 + tx, y0 + ty, Math.min(16, w - tx), 1, '#232744');
+          R(X0 + tx, y0 + ty, 1, Math.min(16, h - ty), '#232744');
+          const s = (tx * 7 + ty * 13) % 5;
+          if (tx + 12 < w && ty + 12 < h) {
+            R(
+              X0 + tx + 3 + s * 2,
+              y0 + ty + 4 + s,
+              2,
+              1,
+              ['#ff4fd8', '#39d3ff', '#ffd23f', '#7cff6b', '#bb9af7'][s]
+            );
+            R(X0 + tx + 9 - s, y0 + ty + 10, 1, 2, '#3d4480');
+          }
+        }
+    if (r.id === 'gym') {
+      for (let ty = 0; ty < h; ty += 14)
+        for (let tx = 0; tx < w; tx += 14) {
+          const c = ((tx + ty) / 14) % 2 ? '#414e64' : '#46536a';
+          R(X0 + tx, y0 + ty, Math.min(14, w - tx), Math.min(14, h - ty), c);
+          R(X0 + tx, y0 + ty, Math.min(14, w - tx), 1, '#3a465a');
+          R(X0 + tx, y0 + ty, 1, Math.min(14, h - ty), '#3a465a');
+        }
+      R(X0 + 3, y0 + 18, 42, 40, '#2f5f8a');
+      R(X0 + 3, y0 + 18, 42, 1, '#4a86bd');
+      R(X0 + 3, y0 + 57, 42, 1, '#234a6e');
+      R(X0 + 52, y0 + 84, 60, 30, '#8a6a4a');
+      R(X0 + 52, y0 + 84, 60, 1, '#b08a62');
+      R(X0 + 52, y0 + 113, 60, 1, '#5e4630');
+      R(X0 + 62, y0 + 85, 40, 28, '#3a3f5c');
+      R(X0 + 62, y0 + 85, 40, 1, '#4a5290');
+    }
+    if (r.id === 'lounge') {
+      for (let ty = 0; ty < h; ty += 12)
+        for (let tx = ((ty / 12) % 2) * 6; tx < w - 4; tx += 12) {
+          R(X0 + tx + 1, y0 + ty + 3, 2, 1, '#73304d');
+          R(X0 + tx, y0 + ty + 4, 4, 1, '#73304d');
+          R(X0 + tx + 1, y0 + ty + 5, 2, 1, '#73304d');
+        }
+      R(X0 + 6, y0 + 42, w - 12, 1, '#e0af68');
+      R(X0 + 6, y0 + h - 6, w - 12, 1, '#e0af68');
+      R(X0 + 6, y0 + 42, 1, h - 48, '#e0af68');
+      R(X0 + w - 7, y0 + 42, 1, h - 48, '#e0af68');
+    }
+    if (r.id === 'cafe')
+      for (let ty = 0; ty < h; ty += 10)
+        for (let tx = 0; tx < w; tx += 10) {
+          if (((tx + ty) / 10) % 2)
+            R(X0 + tx, y0 + ty, Math.min(10, w - tx), Math.min(10, h - ty), '#dcd3c0');
+          R(X0 + tx, y0 + ty, Math.min(10, w - tx), 1, '#cfc5b0');
+        }
+    R(X0, MID + 4, w, RWALL - MID - 4, r.wall);
+    R(X0, MID + 4, w, 1, r.wallL);
+    R(X0, MID + 12, w, 1, tone(r.wall, -0.14));
+    R(X0, RWALL - 5, w, 5, tone(r.wall, -0.32));
+    R(X0, RWALL - 5, w, 1, r.wallL);
+    for (let i = 0; i < 8; i++) R(X0, RWALL + i, w, 1, 'rgba(18,19,42,' + (0.24 - i * 0.03) + ')');
+  });
+  // posters on the room walls
+  const poster = (X, Y, c, fn) => {
+    R(X - 1, Y - 1, 14, 18, INK);
+    R(X, Y, 12, 16, c);
+    fn(X, Y);
+  };
+  R(0, MID, LW, 4, '#232847');
+  R(0, MID, LW, 1, '#3d4480');
+  ROOMS.forEach((r) => {
+    const d = r.door - DW / 2;
+    R(d, MID, DW, RWALL - MID, r.fc);
+    R(d, MID, DW, RWALL - MID, 'rgba(18,19,42,.22)');
+    R(d + 3, MID + 2, DW - 6, 3, r.accent);
+    R(d - 2, MID, 2, RWALL - MID, r.wallL);
+    R(d + DW, MID, 2, RWALL - MID, r.wallL);
+    R(d - 2, MID, DW + 4, 1, '#5d66a8');
+    const tw = r.name.length * 4 + 3;
+    R(d + DW + 5, MID + 9, tw + 2, 9, INK);
+    R(d + DW + 6, MID + 10, tw, 7, '#11132a');
+    text(x, r.name, d + DW + 8, MID + 11, r.accent);
+  });
+  ROOMS.slice(1).forEach((r) => {
+    const X = r.x0 - 3;
+    R(X, MID, 3, LH - MID, INK);
+    R(X + 1, MID, 1, LH - MID, '#3d4480');
+  });
+  R(0, 0, 3, LH, INK);
+  R(LW - 3, 0, 3, LH, INK);
+  R(0, LH - 4, LW, 4, '#232847');
+  R(0, LH - 4, LW, 1, '#3d4480');
+}
+
+// ── things in the scene. An object draws its own moving part, at its own place, so it can be moved freely ──
+const ITEMS = [],
+  WALLS = [];
+const put0 = (s, x, y, b, sh, fx) => ITEMS.push({ s, x, y, b, sh, fx }),
+  wall = (s, x, y, fx) => WALLS.push({ s, x, y, fx });
+const px = (x, y, w, h, c) => {
+  g.fillStyle = c;
+  g.fillRect(x, y, w, h);
+};
+function arcadeFx(kind) {
+  return (T, X, Y) => {
+    px(X + 4, Y + 11, 16, 13, '#07122a');
+    if (kind)
+      for (let i = 0; i < 9; i++)
+        px(
+          X + 6 + (i % 3) * 4,
+          Y + 13 + ((i / 3) | 0) * 4,
+          3,
+          3,
+          (((T * 1.5) | 0) + i) % 4 ? '#39d3ff' : '#ffd23f'
+        );
+    else {
+      const p = X + 8 + Math.round(Math.sin(T * 2) * 4);
+      px(p, Y + 21, 4, 1, '#7cff6b');
+      for (let i = 0; i < 8; i++)
+        px(
+          X + 5 + (i % 4) * 4,
+          Y + 13 + ((i / 4) | 0) * 3 + (Math.sin(T * 2 + i) > 0.5 ? 1 : 0),
+          2,
+          2,
+          ['#ff4fd8', '#39d3ff', '#ffd23f'][i % 3]
+        );
+    }
+  };
+}
+// hall, along the back wall
+wall(F.neon, 8, 10);
+wall(F.board, 150, 6);
+wall(F.status, 272, 8, (T, X, Y) => {
+  const w = P.filter((p) => p.st === 'w').length,
+    t = P.filter((p) => p.st === 't').length;
+  text(g, 'WORKING', X + 5, Y + 5, '#7a84ad');
+  text(g, w, X + 38, Y + 5, '#9ece6a');
+  text(g, 'THINKING', X + 5, Y + 12, '#7a84ad');
+  text(g, t, X + 42, Y + 12, '#bb9af7');
+  for (let i = 0; i < 12; i++) {
+    const h = 1 + (((Math.sin(T * 0.8 + i * 1.7) * 0.5 + 0.5) * 3) | 0);
+    px(X + 5 + i * 4, Y + 22 - h, 3, h, i < w ? '#9ece6a' : '#2e3566');
+  }
+});
+wall(F.cork, 414, 12);
+wall(F.trophy, 454, 16);
+wall(F.days, 490, 12, (T, X, Y) => {
+  text(g, 'DAYS OK', X + 5, Y + 4, '#8b90a8');
+  text(g, '042', X + 13, Y + 10, '#9ece6a');
+});
+wall(F.lift, 538, 6, (T, X, Y) => {
+  const c = Office.lift == null ? T % 24 : 20,
+    open =
+      Office.lift != null
+        ? Office.lift
+        : c > 19 && c < 23
+          ? Math.min(1, (c - 19) * 2, (23 - c) * 2)
+          : 0,
+    w = Math.round(open * 13);
+  if (w) {
+    px(X + 20 - w, Y + 11, w * 2, 29, '#ffe9b8');
+    px(X + 20 - w, Y + 11, w * 2, 2, '#fff6dc');
+  }
+  text(g, c > 19 ? '1' : String(1 + (((c / 5) | 0) % 4)), X + 13, Y + 3, '#ffd23f');
+  px(X + 21, Y + 3 + (((T * 2) | 0) % 2), 3, 1, '#9ece6a');
+  px(X + 22, Y + 4 + (((T * 2) | 0) % 2), 1, 2, '#9ece6a');
+});
+// hall, standing on the floor
+put0(F.server, 54, 30, 74, 11, (T, X, Y) => {
+  for (let i = 0; i < 6; i++) {
+    px(X + 15, Y + 5 + i * 6, 2, 1, Math.sin(T * (3 + i) + i * 2) > 0 ? '#7cff6b' : '#1f5a33');
+    px(X + 18, Y + 5 + i * 6, 2, 1, Math.sin(T * (1.7 + i) + i) > 0.6 ? '#ffb347' : '#5a3d14');
+  }
+});
+put0(F.tank, 84, 40, 73, 19, (T, X, Y) => {
+  for (let i = 0; i < 4; i++) {
+    const fx = X + 11 + Math.round(Math.sin(T * (0.5 + i * 0.13) + i * 1.3) * 9) + i * 3,
+      fy = Y + 6 + i * 2,
+      r = Math.cos(T * (0.5 + i * 0.13) + i * 1.3) > 0;
+    px(fx, fy, 3, 2, ['#ff8a3d', '#ffd23f', '#f7768e', '#fff'][i]);
+    px(r ? fx - 1 : fx + 3, fy, 1, 2, ['#ff8a3d', '#ffd23f', '#f7768e', '#fff'][i]);
+  }
+  for (let i = 0; i < 2; i++) {
+    const q = (T * 0.3 + i / 2) % 1;
+    px(X + 30 + i * 3, Y + 14 - Math.round(q * 11), 1, 1, '#d5f1ff');
+  }
+});
+put0(F.printers, 6, 94, 125, 24, (T, X, Y) => {
+  const q = (T * 0.12) % 1,
+    h = Math.round(q * 7);
+  px(X + 33, Y + 12 - h, 6, h, '#39c5cf');
+  px(X + 31 + Math.round((Math.sin(T * 5) * 0.5 + 0.5) * 8), Y + 10 - h, 3, 1, '#e0af68');
+});
+put0(F.plant, 4, 176, 204, 7);
+put0(F.bin, 222, 160, 172, 5);
+put0(F.flamp, 220, 112, 146, 5);
+put0(F.conf, 508, 98, 125, 31);
+put0(F.coat, 582, 46, 80, 6);
+put0(F.scope, 608, 48, 80, 8);
+put0(F.shelf, 608, 146, 181, 13);
+put0(F.catbed, 584, 193, 200, 0);
+// games room
+wall(F.tv, 118, 214, (T, X, Y) => {
+  px(X + 3, Y + 3, 24, 13, '#0b1530');
+  px(X + 5 + (((T * 14) % 20) | 0), Y + 5 + Math.abs((((T * 9) % 16) - 8) | 0), 2, 2, '#ffd23f');
+  px(X + 4, Y + 9 + ((Math.sin(T * 2) * 3) | 0), 1, 4, '#7cff6b');
+  px(X + 25, Y + 9 + ((Math.cos(T * 2.3) * 3) | 0), 1, 4, '#ff4fd8');
+});
+put0(F.arcade, 6, 222, 262, 11, arcadeFx(0));
+put0(F.arcade2, 30, 222, 262, 11, arcadeFx(1));
+put0(F.low, 106, 262, 274, 14);
+put0(F.gsofa, 96, 292, 318, 26);
+put0(F.foos, 10, 306, 334, 21);
+put0(F.darts, 126, 318, 354, 8);
+put0(F.bean, 62, 334, 350, 22);
+// gym
+wall(F.mirror, 158, 213);
+wall(F.hoop, 250, 211, (T, X, Y) => {
+  const b = Math.abs(Math.sin(T * 2.2));
+  px(X + 6, Y + 34 - Math.round(b * 20), 6, 6, INK);
+  px(X + 7, Y + 35 - Math.round(b * 20), 4, 4, '#ff8a3d');
+});
+put0(F.tread, 158, 262, 294, 15);
+put0(F.bagstand, 242, 250, 292, 10);
+put0(F.rack, 232, 320, 344, 17);
+put0(F.pong, 160, 316, 340, 21);
+put0(F.kettle, 250, 300, 310, 8);
+put0(F.mats, 157, 244, 262, 6);
+// lounge
+put0(F.juke, 280, 224, 262, 11, (T, X, Y) => {
+  px(X + 5, Y + 7, 14, 12, ['#39d3ff', '#ff4fd8', '#ffd23f', '#7cff6b'][((T * 1.5) | 0) % 4]);
+  for (let i = 0; i < 4; i++) {
+    const v = ((T * 4 + i * 2) | 0) % 5;
+    px(X + 6 + i * 3 + 1, Y + 9 + v, 2, 9 - v, 'rgba(18,19,42,.55)');
+  }
+});
+put0(F.slot, 306, 224, 262, 10, (T, X, Y) => {
+  for (let i = 0; i < 3; i++)
+    px(
+      X + 4 + i * 4,
+      Y + 12,
+      3,
+      7,
+      ['#ffd23f', '#f7768e', '#7cff6b', '#39d3ff'][
+        (((T * (SPOT.slot.busy ? 9 : 1.2)) | 0) + i * 3) % 4
+      ]
+    );
+});
+put0(F.flamp, 276, 270, 304, 5);
+put0(F.crystal, 374, 240, 264, 8, (T, X, Y) => {
+  px(X + 8, Y + 6 + (((T * 2) | 0) % 2), 2, 2, '#fff');
+  px(X + 10, Y + 8, 1, 1, '#e9d9ff');
+});
+put0(F.slot, 404, 224, 262, 10, (T, X, Y) => {
+  for (let i = 0; i < 3; i++)
+    px(
+      X + 4 + i * 4,
+      Y + 12,
+      3,
+      7,
+      ['#ffd23f', '#f7768e', '#7cff6b', '#39d3ff'][(((T * 1.4) | 0) + i * 2) % 4]
+    );
+});
+F.roul = inked(
+  spr(50, 28, (R) => {
+    slab(R, 0, 0, 50, 15, '#6e4526');
+    R(2, 2, 46, 11, '#2f7a47');
+    R(2, 2, 46, 1, '#3f9b5b');
+    R(4, 3, 12, 9, '#3b2a1e');
+    R(6, 4, 8, 7, '#c0392b');
+    R(8, 6, 4, 3, '#ffd23f');
+    for (let i = 0; i < 6; i++)
+      for (let j = 0; j < 2; j++)
+        R(20 + i * 4, 4 + j * 4, 3, 3, (i + j) % 2 ? '#c0392b' : '#161a2c');
+    R(45, 4, 2, 7, '#2f9e44');
+    R(0, 15, 50, 4, '#4a2d18');
+    R(3, 19, 3, 9, '#3b2a1e');
+    R(44, 19, 3, 9, '#3b2a1e');
+  })
+);
+put0(F.roul, 284, 300, 328, 24, (T, X, Y) => {
+  px(
+    X + 11 + Math.round(Math.cos(T * 3) * 4),
+    Y + 8 + Math.round(Math.sin(T * 3) * 3),
+    1,
+    1,
+    '#fff'
+  );
+});
+put0(F.cards, 374, 290, 314, 20);
+put0(F.bj, 364, 330, 350, 16);
+put0(F.plant, 410, 322, 350, 7);
+// cafe
+wall(F.menu, 604, 211);
+wall(F.espresso, 568, 226, (T, X, Y) => {
+  for (let i = 0; i < 2; i++) {
+    const q = (T * 0.5 + i / 2) % 1;
+    px(X + 7 + i * 2, Y - 2 - Math.round(q * 8), 1, 2, 'rgba(255,255,255,' + 0.6 * (1 - q) + ')');
+  }
+});
+wall(F.micro, 592, 229);
+put0(F.fridge, 438, 216, 262, 12);
+put0(F.vend, 466, 222, 262, 11);
+put0(F.cooler, 492, 234, 262, 6);
+put0(F.counter, 562, 240, 266, 36, (T, X, Y) => {
+  [
+    ['#7aa2f7', 52],
+    ['#f7768e', 57],
+    ['#9ece6a', 62],
+  ].forEach((m) => {
+    px(X + m[1] - 1, Y - 5, 5, 6, INK);
+    px(X + m[1], Y - 4, 3, 4, m[0]);
+  });
+});
+[
+  [446, 298],
+  [500, 320],
+  [590, 302],
+].forEach((t) => {
+  put0(F.ctable, t[0], t[1], t[1] + 18, 10);
+  put0(F.stool, t[0] - 10, t[1] + 6, t[1] + 16, 0);
+  put0(F.stool, t[0] + 26, t[1] + 6, t[1] + 16, 0);
+});
+put0(F.gum, 622, 318, 344, 5);
+put0(F.plant, 436, 326, 354, 7);
+
+function shadow(x, y, rx) {
+  g.fillStyle = 'rgba(18,19,42,.3)';
+  g.fillRect(x - rx, y - 1, rx * 2, 2);
+  g.fillRect(x - rx + 1, y - 2, rx * 2 - 2, 4);
+}
+function blit(s, x, y) {
+  g.drawImage(s, Math.round(x), Math.round(y));
+}
+function step(o, dt, speed) {
+  if (o.wait > 0) {
+    o.wait -= dt;
+    return false;
+  }
+  for (let n = 0; n < 2; n++) {
+    const p = o.path[(o.i + 1) % o.path.length],
+      dx = p[0] - o.x,
+      dy = p[1] - o.y,
+      d = Math.hypot(dx, dy);
+    if (d < 0.6) {
+      o.i = (o.i + 1) % o.path.length;
+      o.wait = p[2] || 0;
+      if (o.wait > 0) return false;
+      continue;
+    }
+    const s = Math.min(d, speed * dt);
+    o.x += (dx / d) * s;
+    o.y += (dy / d) * s;
+    o.dist += s;
+    o.flip = dx < 0;
+    return true;
+  }
+  return true;
+}
+const facing = (dx, dy) => (Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 2 : 3) : dy > 0 ? 0 : 1);
+// someone on a break: walk the lanes to the next free place on their list, stay a while, repeat
+function roam(p, dt) {
+  if (p.state === 'go') {
+    let left = 24 * dt;
+    while (left > 0 && p.route.length) {
+      const t = p.route[0],
+        dx = t[0] - p.x,
+        dy = t[1] - p.y,
+        d = Math.hypot(dx, dy);
+      if (d > 0.01) p.dir = facing(dx, dy);
+      if (d <= left) {
+        p.x = t[0];
+        p.y = t[1];
+        p.dist += d;
+        left -= d;
+        p.route.shift();
+      } else {
+        p.x += (dx / d) * left;
+        p.y += (dy / d) * left;
+        p.dist += left;
+        left = 0;
+      }
+    }
+    if (!p.route.length) {
+      if (p.joinSeat) return seatDown(p);
+      p.state = 'stay';
+      p.stay = p.spot[6] * (0.8 + Math.random() * 0.5);
+      p.mug = false;
+    }
+    return;
+  }
+  p.stay -= dt;
+  if (p.stay > 0) return;
+  for (let k = 0; k < p.plan.length; k++) {
+    p.pi = (p.pi + 1) % p.plan.length;
+    const s = SPOT[p.plan[p.pi]];
+    if (s.busy) continue;
+    p.mug = p.spot === SPOT.esp;
+    p.spot.busy = false;
+    s.busy = true;
+    p.route = bfs(p.node, s[0])
+      .map((n) => NODE[n])
+      .concat([[s[1], s[2]]]);
+    p.node = s[0];
+    p.spot = s;
+    p.state = 'go';
+    return;
+  }
+  p.stay = 3;
+}
+// someone called away from their place: walk the route, wait there, and come home by the same way
+function errand(p, dt) {
+  const e = p.errand;
+  let left = (e.speed || 30) * dt;
+  while (left > 0 && e.route.length) {
+    const t = e.route[0],
+      dx = t[0] - p.x,
+      dy = t[1] - p.y,
+      d = Math.hypot(dx, dy);
+    if (d > 0.01) p.dir = facing(dx, dy);
+    if (d <= left) {
+      p.x = t[0];
+      p.y = t[1];
+      p.dist += d;
+      left -= d;
+      e.route.shift();
+    } else {
+      p.x += (dx / d) * left;
+      p.y += (dy / d) * left;
+      p.dist += left;
+      left = 0;
+    }
+  }
+  if (e.route.length) return;
+  if (e.home) {
+    p.dir = p.home.dir;
+    p.home = null;
+    p.errand = null;
+    if (e.then) e.then(p);
+  } else if (!e.done) {
+    e.done = true;
+    if (e.dir != null) p.dir = e.dir;
+    if (e.then) e.then(p);
+  }
+}
+// drop lane points that would make someone walk back on themselves
+function tidy(pts) {
+  const r = pts.filter((p, i) => !i || p[0] !== pts[i - 1][0] || p[1] !== pts[i - 1][1]);
+  for (let k = 1; k < r.length - 1; k++) {
+    const a = r[k - 1],
+      b = r[k],
+      c = r[k + 1],
+      onX = a[1] === b[1] && b[1] === c[1],
+      onY = a[0] === b[0] && b[0] === c[0];
+    if ((onX && (b[0] - a[0]) * (c[0] - b[0]) < 0) || (onY && (b[1] - a[1]) * (c[1] - b[1]) < 0)) {
+      r.splice(k, 1);
+      k = Math.max(0, k - 2);
+    }
+  }
+  return r;
+}
+Office.tidy = tidy;
+const nearNode = (x, y) =>
+  Object.keys(NODE).reduce((a, n) =>
+    Math.hypot(NODE[n][0] - x, NODE[n][1] - y) < Math.hypot(NODE[a][0] - x, NODE[a][1] - y) ? n : a
+  );
+// o: { pose, dir, speed, then } — what to do on arrival
+Office.send = function (p, x, y, o) {
+  if (p.pose === 'sleep' || p.home) return false;
+  // out from behind a desk straight to its lane first, so nobody walks through furniture
+  const out = p.seat ? [[p.x, p.seat === 'F' ? 84 : 188]] : [],
+    from = out.length ? out[0] : [p.x, p.y],
+    way = tidy(
+      out.concat(
+        bfs(p.roam && p.state === 'stay' ? p.node : nearNode(from[0], from[1]), nearNode(x, y)).map(
+          (n) => NODE[n]
+        )
+      )
+    );
+  p.home = { x: p.x, y: p.y, dir: p.dir, way };
+  p.errand = Object.assign({ route: way.concat([[x, y]]) }, o);
+  return true;
+};
+Office.back = function (p, then) {
+  if (!p.home || (p.errand && p.errand.home)) return;
+  p.errand = {
+    route: p.home.way
+      .slice()
+      .reverse()
+      .concat([[p.home.x, p.home.y]]),
+    home: true,
+    speed: p.errand && p.errand.speed,
+    then,
+  };
+};
+const sitting = (p) => !p.errand && (!!p.seat || (p.roam && p.state === 'stay' && !!p.spot[5]));
+const spriteY = (p) => {
+  const d = dOf(p);
+  return sitting(p) ? p.y - 6 - (d.ly + 1) : p.y - (d.foot + 1);
+};
+const headTop = (p) => spriteY(p) + 1 + HY,
+  pipY = (p) => (p.pose === 'sleep' ? p.y - 19 : headTop(p) - 8);
+function burst(x, y) {
+  for (let i = 0; i < 18; i++)
+    BITS.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 46,
+      vy: -30 - Math.random() * 40,
+      t: 0,
+      c: ['#f7768e', '#7aa2f7', '#ffd23f', '#9ece6a', '#bb9af7', '#fff'][i % 6],
+    });
+}
+// small personal things, so that no two desks look the same
+function deskProps(i, X, Y) {
+  const k = (i * 5 + 2) % 6;
+  if (k === 0) {
+    px(X + 31, Y - 2, 5, 7, INK);
+    px(X + 32, Y - 3, 3, 5, '#5fae5a');
+    px(X + 32, Y + 2, 3, 2, '#c9744a');
+  }
+  if (k === 1) {
+    px(X + 30, Y, 6, 6, INK);
+    px(X + 31, Y + 2, 4, 3, '#ffd23f');
+    px(X + 33, Y + 1, 2, 2, '#ffd23f');
+    px(X + 35, Y + 2, 1, 1, '#ff8a3d');
+  }
+  if (k === 2) {
+    px(X + 30, Y - 1, 7, 7, INK);
+    px(X + 31, Y, 5, 5, '#f2ede2');
+    px(X + 32, Y + 1, 3, 3, '#7aa2f7');
+  }
+  if (k === 3) {
+    px(X + 30, Y + 1, 7, 5, INK);
+    px(X + 31, Y + 2, 5, 1, '#e03131');
+    px(X + 31, Y + 3, 5, 1, '#3b5bdb');
+    px(X + 31, Y + 4, 5, 1, '#2f9e44');
+  }
+  if (k === 4) {
+    px(X + 31, Y - 2, 5, 8, INK);
+    px(X + 32, Y - 1, 3, 3, '#f7768e');
+    px(X + 33, Y + 2, 1, 3, '#8b90a8');
+    px(X + 32, Y + 5, 3, 1, '#8b90a8');
+  }
+  if (k === 5) {
+    px(X + 30, Y, 6, 6, INK);
+    px(X + 31, Y + 1, 4, 4, '#bb9af7');
+    px(X + 32, Y + 2, 1, 1, '#fff');
+  }
+}
+
+function frame(ts) {
+  requestAnimationFrame(frame);
+  const T = ts / 1000,
+    dt = Office.paused ? 0 : Math.min(0.05, T - (frame.t || T));
+  frame.t = T;
+  if (auto) hour = realHour();
+  const k = sky();
+  night = Math.max(
+    0,
+    Math.min(1, (1 - (0.3 * k.amb[0] + 0.59 * k.amb[1] + 0.11 * k.amb[2]) / 255) * 1.7)
+  );
+  const day = 1 - night;
+  g.imageSmoothingEnabled = false;
+  g.globalCompositeOperation = 'source-over';
+  g.globalAlpha = 1;
+  g.drawImage(bgc, 0, 0);
+  // on the walls
+  WINS.forEach((X) => {
+    blit(F.win, X, 8);
+    px(X + 3, 11, 32, 20, k.sky);
+    g.fillStyle = 'rgba(255,255,255,' + 0.25 * day + ')';
+    g.fillRect(X + 5, 13, 6, 3);
+    g.fillRect(X + 22, 20, 8, 2);
+    px(X + 18, 11, 2, 20, '#e8e2d4');
+    px(X + 3, 20, 32, 1, '#e8e2d4');
+    if (night > 0.5)
+      [
+        [8, 6],
+        [26, 9],
+        [14, 18],
+        [30, 19],
+      ].forEach((s) => px(X + s[0], 8 + s[1], 1, 1, '#fff'));
+  });
+  WALLS.forEach((w) => {
+    blit(w.s, w.x, w.y);
+    if (w.fx) w.fx(T, w.x, w.y);
+  });
+  px(343, 7, 12, 16, INK);
+  px(341, 9, 16, 12, INK);
+  px(344, 8, 10, 14, '#f2ede2');
+  px(342, 10, 14, 10, '#f2ede2');
+  const now = new Date(),
+    hand = (a, l, c) => {
+      g.fillStyle = c;
+      for (let i = 0; i <= l; i++)
+        g.fillRect(Math.round(348.5 + Math.sin(a) * i), Math.round(14.5 - Math.cos(a) * i), 1, 1);
+    };
+  hand((((now.getHours() % 12) + now.getMinutes() / 60) / 12) * 6.283, 3, INK);
+  hand((now.getMinutes() / 60) * 6.283, 5, '#f7768e');
+  // depth-sorted things
+  const Q = [],
+    FX = [];
+  const put = (y, fn) => Q.push([y, fn]);
+  ITEMS.forEach((it) =>
+    put(it.b, () => {
+      if (it.sh) shadow(it.x + (it.s.width >> 1), it.b + 1, it.sh);
+      blit(it.s, it.x, it.y);
+      if (it.fx) it.fx(T, it.x, it.y);
+    })
+  );
+  put(100, () => blit(chairTop('#5fae8f'), 550, 88));
+  [
+    [518, 120],
+    [550, 120],
+  ].forEach((c) => put(136, () => blit(chairBack('#5fae8f'), c[0], c[1])));
+  const mugs = (x, y, n) => {
+    for (let i = 0; i < n; i++) {
+      const X = x + (i % 3) * 5,
+        Y = y + ((i / 3) | 0) * 4;
+      px(X - 1, Y - 1, 5, 5, INK);
+      px(X, Y, 3, 3, ['#f7768e', '#7aa2f7', '#e0af68', '#9ece6a', '#fff'][i % 5]);
+    }
+  };
+  const notes = (x, y, n) => {
+    for (let i = 0; i < n; i++) {
+      px(x + i * 5 - 1, y - 1, 5, 5, INK);
+      px(x + i * 5, y, 3, 3, ['#ffe066', '#9ee6ff', '#b6f09c', '#ff9ecb'][i % 4]);
+    }
+  };
+  SEATS.forEach((s, i) => {
+    const on = !!s.who,
+      X = s.dx;
+    if (s.seat === 'F') {
+      put(119, () => {
+        shadow(X + 19, 120, 19);
+        blit(F.deskBack, X, 93);
+        if (on) {
+          mugs(X + 3, 104, 1 + (i % 3));
+          deskProps(i, X, 100);
+        }
+      });
+      if (!on) put(103, () => blit(chairTop('#4a5290'), s.x - 8, s.y - 16));
+    } else {
+      put(154, () => {
+        shadow(X + 19, 155, 19);
+        blit(F.deskScreen, X, 128);
+        px(X + 10, 130, 20, 8, '#0b1022');
+        if (!on) return;
+        mugs(X + 3, 140, 1 + (i % 3));
+        notes(X + 10, 127, i % 4);
+        deskProps(i, X, 137);
+        const sp = s.who.rate ? 9 : 4,
+          off = (T * sp) | 0;
+        for (let r = 0; r < 3; r++) {
+          const v = ((r + off + i) * 7919) % 97;
+          px(
+            X + 11 + (v % 3) * 2,
+            131 + r * 2,
+            4 + (v % 11),
+            1,
+            ['#7aa2f7', '#9ece6a', '#bb9af7', '#e0af68'][v % 4]
+          );
+        }
+      });
+      if (!on) put(169, () => blit(chairBack('#4a5290'), s.x - 8, s.y - 13));
+    }
+  });
+  // the lead walks, the intern keeps a few steps behind
+  P.forEach((p) => {
+    if (p.errand) errand(p, dt);
+    else if (p.roam) roam(p, dt);
+  });
+  const moved = LEAD.state === 'go';
+  if (moved && LEAD.dist - LEAD.mark >= 1) {
+    LEAD.mark = LEAD.dist;
+    LEAD.trail.push([LEAD.x, LEAD.y, LEAD.dir]);
+    if (LEAD.trail.length > GAP) LEAD.trail.shift();
+  }
+  let subGo = false;
+  if (LEAD.trail.length >= GAP && dt && !SUB.errand) {
+    const t = LEAD.trail[0],
+      dx = t[0] - SUB.x,
+      dy = t[1] - SUB.y,
+      d = Math.hypot(dx, dy);
+    if (d > 0.5) {
+      const s = Math.min(d, 27 * dt);
+      SUB.x += (dx / d) * s;
+      SUB.y += (dy / d) * s;
+      SUB.dist += s;
+      subGo = true;
+      SUB.dir = d < 3 ? t[2] : facing(dx, dy);
+    }
+  }
+  SUB.moving = subGo || (moved && LEAD.trail.length >= GAP);
+  if (!SUB.moving) SUB.dir = facing(LEAD.x - SUB.x, LEAD.y - SUB.y);
+  const blinkNow = (p) => (T * 1000 + +p.id.slice(1) * 977) % 4200 < 140,
+    talker = ((T / 2.6) | 0) % 2;
+  P.forEach((p) => {
+    if (p.gone) return;
+    const d = dOf(p);
+    let pose = p.pose,
+      dir = p.dir || 0,
+      f,
+      z = 0;
+    if (p.roam) {
+      if (p.state === 'go') pose = 'walk';
+      else {
+        pose = p.spot[3];
+        dir = p.spot[4];
+        z = p.spot[7] || 0;
+        if (p.spot === SPOT.esp && p.stay < 1.6) {
+          pose = 'sip';
+          dir = 0;
+        }
+      }
+    }
+    if (p === SUB) pose = p.moving ? 'walk' : 'idle';
+    if (p.talk !== undefined && p.talk !== talker) pose = 'idle';
+    if (p.errand) pose = p.errand.route.length ? 'walk' : p.errand.pose || 'idle';
+    if (p.once) {
+      if (T < p.once.until) pose = p.once.pose;
+      else p.once = null;
+    }
+    if (p.emote && !p.errand) {
+      const on = T % p.emote.every > p.emote.at;
+      if (on) {
+        pose = p.emote.pose;
+        if (!p.emoOn) {
+          if (pose === 'cheer') burst(p.x, headTop(p) - 2);
+          if (Office.onEvent) Office.onEvent(pose, p);
+        }
+      }
+      p.emoOn = on;
+    }
+    p.now = pose;
+    const sit = sitting(p);
+    f =
+      pose === 'walk'
+        ? p.roam && p.state === 'stay' && !p.errand
+          ? ((T * 8) | 0) % 6
+          : Math.floor(p.dist / 2.6) % 6
+        : frameOf(pose, T, p.rate);
+    if (pose === 'sleep') {
+      put(p.y + 9, () => {
+        blit(sleeper(p), p.x - 19, p.y - 12 + (Math.sin(T * 1.4) > 0 ? 0 : 1));
+      });
+      FX.push(() => {
+        for (let i = 0; i < 3; i++) {
+          const q = (T * 0.35 + i / 3) % 1;
+          g.globalAlpha = Math.sin(q * Math.PI);
+          g.fillStyle = '#c8d3f5';
+          const zx = Math.round(p.x - 18 + q * 10),
+            zy = Math.round(p.y - 16 - q * 20),
+            s = i % 2 ? 2 : 1;
+          g.fillRect(zx, zy, 3 * s, s);
+          g.fillRect(zx + s, zy + s, s, s);
+          g.fillRect(zx, zy + 2 * s, 3 * s, s);
+        }
+        g.globalAlpha = 1;
+      });
+      return;
+    }
+    // the chair stays at the desk while its owner is away
+    const at = p.home || p;
+    if (p.seat === 'F') put(at.y - 4, () => blit(chairTop(p.chair), at.x - 8, at.y - 16));
+    put(p.y + (p.errand ? 0 : z), () => {
+      if (!sit) shadow(p.x, p.y + 1, 6);
+      const L = p.mug ? Object.assign({}, p, { mug: true, id: p.id + 'm' }) : p;
+      blit(
+        sprite(L, d, pose, dir, f, !(pose === 'type' && dir === 1) && blinkNow(p), sit),
+        p.x - 13,
+        spriteY(p)
+      );
+    });
+    if (p.seat === 'B') put(at.y + 3, () => blit(chairBack(p.chair), at.x - 8, at.y - 13));
+    if (pose === 'palm')
+      FX.push(() => {
+        const x = p.x + 8,
+          y = headTop(p) - 7 + (Math.sin(T * 9) > 0 ? 0 : 1);
+        px(x - 1, y - 1, 4, 10, INK);
+        px(x, y, 2, 5, '#ff4b4b');
+        px(x, y + 6, 2, 2, '#ff4b4b');
+      });
+    if (pose === 'talk')
+      FX.push(() => {
+        const x = p.x + (p.dir === 2 ? -4 : -8),
+          y = headTop(p) - 11;
+        px(x - 1, y, 15, 9, INK);
+        px(x, y - 1, 13, 11, INK);
+        px(x, y, 13, 9, '#f7f8fb');
+        px(x + (p.dir === 2 ? 8 : 3), y + 9, 2, 2, '#f7f8fb');
+        for (let i = 0; i < 3; i++)
+          px(x + 2 + i * 4, y + 3, 2, 2, ((T * 4) | 0) % 3 === i ? '#3b5bdb' : '#aab0c8');
+      });
+  });
+  const cm = step(CAT, dt, 17);
+  CAT.sit = !cm;
+  put(CAT.y, () => {
+    shadow(CAT.x, CAT.y + 1, 6);
+    blit(
+      catSprite(cm ? Math.floor(CAT.dist / 2.4) % 4 : ((T * 2) | 0) % 2, CAT.sit, CAT.flip),
+      CAT.x - 10,
+      CAT.y - 12
+    );
+  });
+  const gm = step(GOOSE, dt, 11);
+  put(GOOSE.y, () => {
+    shadow(GOOSE.x, GOOSE.y + 1, 5);
+    blit(
+      gooseSprite(gm ? Math.floor(GOOSE.dist / 1.8) % 4 : 0, GOOSE.flip),
+      GOOSE.x - 9,
+      GOOSE.y - 18
+    );
+  });
+  Office.extra.forEach((fn) => fn(T, dt, put, FX));
+  Q.sort((a, b) => a[0] - b[0]).forEach((q) => q[1]());
+  FX.forEach((fn) => fn());
+  for (let i = HEARTS.length - 1; i >= 0; i--) {
+    const h = HEARTS[i];
+    h.t += dt;
+    if (h.t > 1.4) {
+      HEARTS.splice(i, 1);
+      continue;
+    }
+    if (h.t < 0) continue;
+    const x = Math.round(h.x + Math.sin(h.t * 6 + i) * 2),
+      y = Math.round(h.y - h.t * 18);
+    g.globalAlpha = 1 - h.t / 1.4;
+    g.fillStyle = '#f7768e';
+    g.fillRect(x, y, 2, 2);
+    g.fillRect(x + 3, y, 2, 2);
+    g.fillRect(x, y + 1, 5, 2);
+    g.fillRect(x + 1, y + 3, 3, 1);
+    g.fillRect(x + 2, y + 4, 1, 1);
+  }
+  g.globalAlpha = 1;
+  for (let i = BITS.length - 1; i >= 0; i--) {
+    const c = BITS[i];
+    c.t += dt;
+    if (c.t > 1.5) {
+      BITS.splice(i, 1);
+      continue;
+    }
+    c.vy += 110 * dt;
+    c.x += c.vx * dt;
+    c.y += c.vy * dt;
+    g.globalAlpha = Math.min(1, (1.5 - c.t) * 2);
+    g.fillStyle = c.c;
+    g.fillRect(Math.round(c.x), Math.round(c.y), 2, ((c.t * 12) | 0) % 2 ? 1 : 2);
+  }
+  g.globalAlpha = 1;
+  // light: the hour sets the base colour, each lamp adds one soft pool (a gradient, so no rings show)
+  lg.globalCompositeOperation = 'source-over';
+  lg.globalAlpha = 1;
+  lg.fillStyle = 'rgb(' + k.amb.map((v) => v | 0).join(',') + ')';
+  lg.fillRect(0, 0, LW, LH);
+  if (night > 0.03) {
+    lg.globalCompositeOperation = 'lighter';
+    const pool = (x, y, c, r, a) => {
+      const gr = lg.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, hexA(c, a));
+      gr.addColorStop(0.55, hexA(c, a * 0.45));
+      gr.addColorStop(1, hexA(c, 0));
+      lg.fillStyle = gr;
+      lg.fillRect(x - r, y - r, r * 2, r * 2);
+    };
+    LIGHTS.forEach((l, i) =>
+      pool(
+        l[0],
+        l[1],
+        l[2],
+        l[3],
+        l[4] *
+          night *
+          (0.92 + 0.08 * Math.sin(T * 3 + i * 1.7)) *
+          (i === 0 && Math.sin(T * 1.3 + 7) > 0.96 ? 0.35 : 1)
+      )
+    );
+    SEATS.forEach((s) => {
+      if (s.who)
+        pool(
+          s.x,
+          s.seat === 'B' ? s.y - 26 : s.y - 4,
+          s.seat === 'B' ? '#8fd3ff' : '#ffd39a',
+          s.seat === 'B' ? 36 : 26,
+          0.55 * night
+        );
+    });
+  }
+  if (Office.onLight) Office.onLight(lg, T, night);
+  g.globalCompositeOperation = 'multiply';
+  g.drawImage(lm, 0, 0);
+  g.globalCompositeOperation = 'source-over';
+  if (day > 0.05) {
+    g.globalCompositeOperation = 'lighter';
+    g.fillStyle = 'rgba(255,236,190,' + 0.1 * day + ')';
+    WINS.forEach((X) => {
+      g.beginPath();
+      g.moveTo(X + 3, WALL);
+      g.lineTo(X + 35, WALL);
+      g.lineTo(X + 75, WALL + 84);
+      g.lineTo(X + 35, WALL + 84);
+      g.fill();
+    });
+    g.globalCompositeOperation = 'source-over';
+  }
+  // status dots, drawn after the light so they read at night
+  P.forEach((p) => {
+    if (p.now === 'talk' || p.nopip || p.gone) return;
+    const x = Math.round(p.x) - 2,
+      y = Math.round(pipY(p)) + (p.now === 'cheer' ? -3 : p.now === 'lift' ? -5 : 0),
+      c =
+        p.st === 'w'
+          ? ((T * 2) | 0) % 2
+            ? '#9ece6a'
+            : '#c5f08f'
+          : p.st === 't'
+            ? '#bb9af7'
+            : '#8b90a8';
+    px(x, y, 5, 5, INK);
+    px(x + 1, y + 1, 3, 3, c);
+  });
+  if (night > 0.4 || Math.sin(T * 1.3 + 7) <= 0.96) blit(F.neon, 8, 10);
+  Office.glow.forEach((fn) => fn(T, dt));
+  // markers: where the games open from, and the objects that lead to other views
+  const bob = ((T * 2) | 0) % 2;
+  if (Office.showGames)
+    GAMES.forEach((m) => {
+      const w = m.n > 9 ? 11 : 7,
+        x = m.x - (w >> 1),
+        y = m.y - 4 - bob,
+        hot = Office.hov === m || Office.picked === m;
+      px(x - 1, y, w + 2, 9, INK);
+      px(x, y - 1, w, 11, INK);
+      px(x, y, w, 9, hot ? '#fff' : '#ffd23f');
+      text(g, m.n, x + 2, y + 2, INK);
+    });
+  if (Office.showDoors)
+    DOORS.forEach((m) => {
+      const x = m.x - 3,
+        y = m.r[1] - 12 - bob,
+        hot = Office.hov === m;
+      px(x - 1, y - 1, 9, 9, INK);
+      px(x + 1, y + 8, 5, 2, INK);
+      px(x + 2, y + 10, 3, 1, INK);
+      const c = hot ? '#fff' : '#39d3ff';
+      px(x, y, 7, 7, c);
+      px(x + 2, y + 7, 3, 2, c);
+      px(x + 3, y + 9, 1, 1, c);
+      px(x + 3, y + 1, 1, 3, INK);
+      px(x + 3, y + 5, 1, 1, INK);
+    });
+  // to the screen
+  const ease = 1 - Math.exp(-(dt || 0.016) * RATE);
+  if (S !== SB) {
+    S = Math.abs(SB - S) < 0.003 ? SB : S + (SB - S) * ease;
+    place(!HOLD);
+    if (S === SB && HOLD) {
+      HOLD = false;
+      RATE = 3.2;
+    }
+  }
+  if (Math.abs(TX - CX) + Math.abs(TY - CY) > 0.4) {
+    CX += (TX - CX) * ease;
+    CY += (TY - CY) * ease;
+    place(true);
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#05060d';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(base, 0, 0, LW, LH, OX, OY, LW * S, LH * S);
+  P.forEach((p) => {
+    const show =
+      Office.names === 'always' ||
+      (Office.names !== 'pips' &&
+        (p === Office.hov ||
+          p === Office.picked ||
+          (Office.names === 'working' && p.st === 'w' && !p.roam)));
+    p.el.hidden = !show || !!p.gone;
+    if (show) {
+      p.el.style.left = OX + p.x * S + 'px';
+      p.el.style.top = OY + (pipY(p) - 2) * S + 'px';
+    }
+  });
+  const h = Office.hov,
+    st = spotTag;
+  if (h && h.kind && h.kind !== 'cat') {
+    st.hidden = false;
+    st.textContent = h.kind === 'game' ? h.n + ' · ' + h.name : h.name;
+    st.style.left = OX + h.x * S + 'px';
+    st.style.top = OY + (h.kind === 'game' ? h.y - 8 : h.r[1] - 16) * S + 'px';
+  } else st.hidden = true;
+  Office.onFrame.forEach((fn) => fn(T, dt));
+}
+
+// ── camera, sizing, pointer ─────────────────────────────────────
+// zoom 0 shows the whole floor (whole-number scale when it fits); each step above adds one whole pixel of scale
+// SB is the scale the camera is heading for; on a glide the frame loop eases S to it and lands exactly on it
+function aim(glide) {
+  const fit = Math.min(vw / LW, vh / LH),
+    b = Math.floor(fit + SLACK);
+  SB = ZM ? (b >= 1 ? b : 0) + ZM : b >= 1 ? b : fit;
+  if (!glide) S = SB;
+}
+function place(soft) {
+  OX =
+    LW * S >= vw
+      ? Math.min(0, Math.max(vw - LW * S, Math.round(vw / 2 - CX * S)))
+      : Math.round((vw - LW * S) / 2);
+  OY =
+    LH * S >= vh
+      ? Math.min(0, Math.max(vh - LH * S, Math.round(vh / 2 - CY * S)))
+      : Math.round((vh - LH * S) / 2);
+  if (!soft) {
+    CX = (vw / 2 - OX) / S;
+    CY = (vh / 2 - OY) / S;
+    TX = CX;
+    TY = CY;
+  }
+  cv.style.cursor = LW * S > vw || LH * S > vh ? 'grab' : '';
+}
+function layout() {
+  const r = stage.getBoundingClientRect();
+  if (Office.snap) {
+    // the stage hugs the floor only when the whole floor shows at 2x or more
+    const fw = Math.min(
+        Math.floor(r.width / LW + SLACK),
+        Math.max(1, Math.floor((window.innerHeight * 0.92) / LH))
+      ),
+      h = fw >= 2 ? LH * fw + 2 : 0;
+    if (h && Math.abs(r.height - h) > 1) stage.style.height = h + 'px';
+    else if (!h) stage.style.height = '';
+  }
+  vw = Math.max(10, stage.clientWidth);
+  vh = Math.max(10, stage.clientHeight);
+  cv.width = vw;
+  cv.height = vh;
+  aim(false);
+  place();
+  // a screen too small for the whole floor at 2x opens on the desks at 2x instead: drag to look around
+  // until the viewer moves the camera, the opening view follows the stage size
+  if (!Office.touched) {
+    const small = Math.min(vw / LW, vh / LH) + SLACK < 2;
+    if (small) Office.cam.to(300, 128, vw < LW ? 2 : 1);
+    else Office.cam.to(320, 180, 0);
+    if (Office.onSmall) Office.onSmall(small);
+  }
+}
+function hit(e) {
+  const r = cv.getBoundingClientRect(),
+    x = (e.clientX - r.left - OX) / S,
+    y = (e.clientY - r.top - OY) / S;
+  Office.at = [x, y];
+  if (Office.showGames) {
+    const m = GAMES.find((m) => Math.abs(x - m.x) < 7 && Math.abs(y - m.y + 1) < 7);
+    if (m) return m;
+  }
+  if (Math.abs(x - CAT.x) < 10 && y > CAT.y - 13 && y < CAT.y + 2) return CAT;
+  let best = null;
+  P.forEach((p) => {
+    if (p.gone) return;
+    const ok =
+      p.pose === 'sleep'
+        ? Math.abs(x - p.x) < 18 && Math.abs(y - (p.y - 6)) < 8
+        : Math.abs(x - p.x) < 8 && y > headTop(p) - 3 && y < p.y + 2;
+    if (ok && (!best || p.y > best.y)) best = p;
+  });
+  if (best) return best;
+  return (
+    DOORS.find((d) => x >= d.r[0] && x <= d.r[0] + d.r[2] && y >= d.r[1] && y <= d.r[1] + d.r[3]) ||
+    null
+  );
+}
+let drag = null,
+  spotTag;
+function start() {
+  design();
+  paintBg();
+  tagsEl.innerHTML = '';
+  P.forEach((p) => {
+    const el = document.createElement('div');
+    el.className = 'tag';
+    el.textContent = p.name;
+    el.hidden = true;
+    tagsEl.appendChild(el);
+    p.el = el;
+  });
+  spotTag = document.createElement('div');
+  spotTag.className = 'tag spot';
+  spotTag.hidden = true;
+  tagsEl.appendChild(spotTag);
+  cv.addEventListener('pointerdown', (e) => {
+    cv.setPointerCapture(e.pointerId);
+    HOLD = false;
+    drag = { x: e.clientX, y: e.clientY, cx: CX, cy: CY, m: 0 };
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (drag) {
+      const dx = e.clientX - drag.x,
+        dy = e.clientY - drag.y;
+      drag.m = Math.max(drag.m, Math.abs(dx) + Math.abs(dy));
+      if (drag.m > 4) {
+        CX = drag.cx - dx / S;
+        CY = drag.cy - dy / S;
+        place();
+        Office.touched = true;
+        if (Office.onDrag) Office.onDrag();
+      }
+    } else {
+      Office.hov = hit(e);
+      cv.classList.toggle('hit', !!Office.hov);
+    }
+  });
+  cv.addEventListener('pointerup', (e) => {
+    const moved = drag && drag.m > 4;
+    drag = null;
+    if (moved) return;
+    const a = hit(e);
+    if (a === CAT)
+      for (let i = 0; i < 4; i++)
+        HEARTS.push({ x: CAT.x - 8 + i * 5, y: CAT.y - 16, t: -i * 0.12 });
+    Office.picked = a;
+    if (Office.onPick) Office.onPick(a);
+  });
+  cv.addEventListener('pointercancel', () => {
+    drag = null;
+  });
+  cv.addEventListener('pointerleave', () => {
+    Office.hov = null;
+  });
+  layout();
+  new ResizeObserver(layout).observe(stage);
+  requestAnimationFrame(frame);
+}
+
+// ── plugging in an agent from outside ───────────────────────────
+function seatDown(p) {
+  const s = p.joinSeat;
+  p.joinSeat = null;
+  s.res = null;
+  s.who = p;
+  p.roam = false;
+  p.x = s.x;
+  p.y = s.y;
+  p.seat = s.seat;
+  p.dir = s.seat === 'F' ? 0 : 1;
+  p.chair = p.shirt;
+  Office.setState(p, p.want || 'working');
+  if (Office.onEvent) Office.onEvent('join', p);
+}
+Office.join = function (name, state) {
+  const s = SEATS.find((x) => !x.who && !x.res);
+  if (!s) return null;
+  const p = person(name, {
+    role: 'plugged in from outside',
+    quote: 'Hello, office.',
+    x: 557,
+    y: 62,
+    roam: true,
+    state: 'go',
+    plan: [],
+    route: [],
+    st: 'i',
+    want: state,
+  });
+  s.res = p;
+  p.joinSeat = s;
+  p.route =
+    s.seat === 'F'
+      ? [
+          [557, 84],
+          [s.x, 84],
+          [s.x, s.y],
+        ]
+      : [
+          [557, 84],
+          [490, 84],
+          [490, 188],
+          [s.x, 188],
+          [s.x, s.y],
+        ];
+  const el = document.createElement('div');
+  el.className = 'tag';
+  el.textContent = p.name;
+  el.hidden = true;
+  tagsEl.insertBefore(el, spotTag);
+  p.el = el;
+  return p;
+};
+Office.setState = function (p, state) {
+  p.want = state;
+  if (p.roam) return;
+  const once = (pose) => {
+    p.once = { pose, until: performance.now() / 1000 + 2.6 };
+    if (pose === 'cheer') burst(p.x, headTop(p) - 2);
+    if (Office.onEvent) Office.onEvent(pose, p);
+  };
+  if (state === 'working') {
+    p.pose = 'type';
+    p.st = 'w';
+  } else if (state === 'thinking') {
+    p.pose = 'think';
+    p.st = 't';
+  } else if (state === 'idle') {
+    p.pose = 'idle';
+    p.st = 'i';
+  } else if (state === 'done') {
+    p.pose = 'type';
+    p.st = 'w';
+    once('cheer');
+  } else if (state === 'error') {
+    p.pose = 'type';
+    p.st = 'w';
+    once('palm');
+  }
+};
+// back to the opening view for this screen size
+Office.home = function () {
+  Office.touched = false;
+  layout();
+};

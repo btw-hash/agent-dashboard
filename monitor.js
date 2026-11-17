@@ -23,7 +23,9 @@ function ping(cb) {
 
   const req = lib.get(url, { timeout: 8000 }, (res) => {
     let body = '';
-    res.on('data', (chunk) => { body += chunk; });
+    res.on('data', (chunk) => {
+      body += chunk;
+    });
     res.on('end', () => {
       const elapsed = Date.now() - start;
       try {
@@ -35,7 +37,9 @@ function ping(cb) {
     });
   });
 
-  req.on('timeout', () => { req.destroy(new Error('timeout')); });
+  req.on('timeout', () => {
+    req.destroy(new Error('timeout'));
+  });
   req.on('error', (err) => cb(err, null, Date.now() - start, null));
 }
 
@@ -48,18 +52,20 @@ function check() {
       console.log(`[${ts()}] [FAIL #${failures}] ${reason} (${ms}ms)`);
 
       if (failures >= FAIL_THRESHOLD) {
-        console.log(`[${ts()}] *** ALERT: health check failed ${failures} times in a row — service may be down ***`);
+        console.log(
+          `[${ts()}] *** ALERT: health check failed ${failures} times in a row — service may be down ***`
+        );
       }
       return;
     }
 
     failures = 0;
     const uptime = data?.uptime != null ? `uptime=${Math.floor(data.uptime)}s` : '';
-    const agents  = data?.agents   != null ? `agents=${data.agents}`   : '';
-    const ws      = data?.wsClients != null ? `ws=${data.wsClients}`   : '';
-    const tasks   = data?.tasks    != null ? `tasks=${data.tasks}`    : '';
-    const mem     = data?.memMB    != null ? `mem=${data.memMB}MB`    : '';
-    const extras  = [uptime, agents, ws, tasks, mem].filter(Boolean).join(' ');
+    const agents = data?.agents != null ? `agents=${data.agents}` : '';
+    const ws = data?.wsClients != null ? `ws=${data.wsClients}` : '';
+    const tasks = data?.tasks != null ? `tasks=${data.tasks}` : '';
+    const mem = data?.memMB != null ? `mem=${data.memMB}MB` : '';
+    const extras = [uptime, agents, ws, tasks, mem].filter(Boolean).join(' ');
     console.log(`[${ts()}] [OK] ${ms}ms  ${extras}`);
   });
 }
