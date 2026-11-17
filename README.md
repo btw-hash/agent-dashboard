@@ -4,7 +4,10 @@ A pixel-art office where every running AI agent is a person. It sits down and ty
 it works, wanders off for coffee when it rests, cheers when a task is done and facepalms on
 a tool error. Made to be looked at: put it on a second screen and leave it on.
 
-![The office](docs/office.png)
+![The office: agents at their desks, a person's card](docs/office.gif)
+
+**[Open the live demo](https://office.btwstudio.dev)**: the same page with no server behind it, so the
+agents in it are simulated.
 
 ## Run it
 
