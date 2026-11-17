@@ -365,6 +365,20 @@ input:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: opacity 0.3s;
+  min-width: 0;
+}
+/* who made it: quiet, at the far end of the strip */
+.ticker .by {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: none;
+}
+.ticker .by:hover,
+.ticker .by:focus-visible {
+  color: var(--text-hi);
+  text-decoration: underline;
 }
 .toasts {
   position: absolute;
