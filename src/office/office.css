@@ -367,18 +367,20 @@ input:focus-visible {
   transition: opacity 0.3s;
   min-width: 0;
 }
-/* who made it: quiet, at the far end of the strip */
-.ticker .by {
-  margin-left: auto;
-  flex: none;
+/* who made it: the last, quiet line of the connect sheet */
+.made {
+  margin: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
   font-size: 11px;
   color: var(--text-dim);
-  text-decoration: none;
 }
-.ticker .by:hover,
-.ticker .by:focus-visible {
+.made a {
+  color: var(--text);
+}
+.made a:hover,
+.made a:focus-visible {
   color: var(--text-hi);
-  text-decoration: underline;
 }
 .toasts {
   position: absolute;

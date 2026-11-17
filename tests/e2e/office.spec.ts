@@ -23,7 +23,7 @@ test('the office opens with people at desks and on a break', async ({ page }) =>
   expect(s.seated).toBeLessThan(s.n);
   await expect(page.locator('#count')).toContainText('working');
   await expect(page.locator('#modeTag')).toBeVisible();
-  await expect(page.locator('.ticker .by')).toHaveAttribute('href', 'https://btwstudio.dev');
+  await expect(page.locator('.sheet .made a')).toHaveAttribute('href', 'https://btwstudio.dev');
   // the canvas is painted, not blank
   const colours = await page.evaluate(() => {
     const d = (window as any).__office.office.base
