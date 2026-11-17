@@ -124,9 +124,11 @@ export function installGames(office) {
         '</b>' +
         (d
           ? '<span>' + d.how + '</span><button id="go" class="blink">PRESS START</button>'
-          : '<span>OUT OF ORDER</span>');
+          : CAB.stale
+            ? '<span>THE OFFICE WAS UPDATED</span><button id="go" class="blink">RELOAD</button>'
+            : '<span>OUT OF ORDER</span>');
     const b = c.querySelector('#go');
-    if (b) b.onclick = play;
+    if (b) b.onclick = d || kind === 'over' ? play : () => location.reload();
   }
   async function open(m) {
     CAB.m = m;
@@ -145,10 +147,14 @@ export function installGames(office) {
     office.cam.frame(m.x, m.y + 10, 300, 170, true);
     const load = MODS['./play/' + FILE[m.name] + '.js'];
     let d = null;
+    CAB.stale = false;
     try {
       d = load ? (await load()).default : null;
     } catch {
+      // the game's file is gone: this page was opened before the office was built again,
+      // and a build names its files after their content. A reload brings the new names
       d = null;
+      CAB.stale = true;
     }
     if (CAB.m !== m || CAB.state === 'off') return;
     CAB.d = d;
