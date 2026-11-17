@@ -1,11 +1,10 @@
 {
   "name": "agent-dashboard",
-  "version": "2.0.0",
-  "description": "",
+  "version": "3.0.0",
+  "description": "A pixel-art office where every running AI agent is a person",
   "main": "server.js",
   "scripts": {
-    "dev": "concurrently -n srv,vite,sync -c green,magenta,cyan \"node server.js\" \"npx vite\" \"node sync-to-cloud.js\"",
-    "dev:nosync": "concurrently -n srv,vite -c green,magenta \"node server.js\" \"npx vite\"",
+    "dev": "concurrently -n srv,vite -c green,magenta \"node server.js\" \"npx vite\"",
     "build": "npx vite build",
     "start": "node server.js",
     "preview": "npx vite preview",
@@ -14,7 +13,8 @@
     "test:e2e": "npx playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +23,7 @@
   "dependencies": {
     "chokidar": "^3.6.0",
     "dotenv": "^17.4.0",
+    "three": "^0.187.0",
     "ws": "^8.20.0"
   },
   "devDependencies": {
@@ -36,5 +37,14 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md,css}": "prettier --write"
-  }
+  },
+  "bin": {
+    "agent-office": "bin/agent-office.js"
+  },
+  "files": [
+    "bin",
+    "server.js",
+    "src/server",
+    "dist"
+  ]
 }

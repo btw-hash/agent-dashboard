@@ -1,5 +1,5 @@
-# Agent Dashboard autostart — idempotent
-# If local server.js (port 3737) is down, start it + sync-to-cloud.js detached.
+# Agent Office autostart - idempotent
+# If local server.js (port 3737) is down, start it detached.
 # Safe to run on every Claude Code SessionStart.
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -22,7 +22,7 @@ if ($alive) {
 }
 
 # Health failed — before launching a fresh pair, sweep stale node processes
-# (server.js / sync-to-cloud.js / concurrently / vite) so they don't accumulate.
+# (server.js / concurrently / vite) so they don't accumulate.
 $killer = 'C:\AI\scripts\kill-orphans-agent-dashboard.ps1'
 if (Test-Path $killer) {
   try { & $killer; Log 'kill-orphans-agent-dashboard.ps1 ran' } catch { Log "kill-orphans failed: $_" }
@@ -38,7 +38,7 @@ if ($listener) {
   Start-Sleep -Seconds 1
 }
 
-Log 'server.js not responding — starting detached stack'
+Log 'server.js not responding - starting it detached'
 
 # Launch server.js detached (hidden window, logs to server.log)
 Start-Process -FilePath 'node' `
@@ -48,15 +48,4 @@ Start-Process -FilePath 'node' `
   -RedirectStandardOutput (Join-Path $root 'server.log') `
   -RedirectStandardError  (Join-Path $root 'server.err')
 
-# Give server a couple seconds to bind port before sync starts hammering it
-Start-Sleep -Seconds 3
-
-# Launch sync-to-cloud.js detached
-Start-Process -FilePath 'node' `
-  -ArgumentList 'sync-to-cloud.js' `
-  -WorkingDirectory $root `
-  -WindowStyle Hidden `
-  -RedirectStandardOutput (Join-Path $root 'sync.log') `
-  -RedirectStandardError  (Join-Path $root 'sync.err')
-
-Log 'server.js + sync-to-cloud.js launched'
+Log 'server.js launched'

@@ -1,0 +1,167 @@
+<title>Agent Office People and Visions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Layout: two decisions on one page. People first (three designs side by side), then four different ideas of what the product is. */
+:root{
+  color-scheme:dark;
+  --bg:#080810; --surface:#0c0d1e; --surface-2:#11132a; --border:#1e2240; --border-hi:#2e3566;
+  --text:#c8d3f5; --text-hi:#e4ecff; --text-dim:#7a84ad;
+  --accent:#7aa2f7; --think:#bb9af7; --ok:#9ece6a; --warn:#e0af68;
+  --font:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+  --pixel:"Press Start 2P","JetBrains Mono",monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.page{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--pixel);font-size:15px;color:var(--text-hi);margin:0 0 6px;letter-spacing:.04em;line-height:1.6;text-wrap:balance}
+h2{font-family:var(--pixel);font-size:12px;color:var(--text-hi);margin:8px 0 2px;letter-spacing:.05em;line-height:1.7}
+h3{font-family:var(--pixel);font-size:10px;color:var(--accent);margin:0;letter-spacing:.06em;line-height:1.7}
+p{margin:0;max-width:76ch}.lede{color:var(--text-dim)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.box{background:var(--surface);border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.box canvas{image-rendering:pixelated;width:100%;height:auto;display:block;background:#1a1d3a;border:1px solid var(--border)}
+.box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:12px}
+.box li::marker{color:var(--accent)}
+.rows{display:grid;grid-template-columns:auto 1fr;gap:0 10px;font-size:10px;color:var(--text-dim);align-items:center}
+.fit{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border-hi);padding:1px 6px;color:var(--text-dim)}
+.pill.y{color:var(--ok);border-color:#4d6b3a}.pill.m{color:var(--warn);border-color:#6b5a34}
+pre.term{margin:0;background:#04060a;border:1px solid var(--border);color:#9ece6a;font:11px/1.35 var(--font);padding:10px;overflow-x:auto;white-space:pre;min-height:232px}
+.screen{background:#0d1020;border:1px solid var(--border);padding:8px 8px 0;display:flex;flex-direction:column;gap:6px}
+.screen i{display:block;height:6px;background:#1c2140}.screen i:nth-child(2){width:70%}.screen i:nth-child(3){width:86%}.screen i:nth-child(4){width:52%}.screen i:nth-child(5){width:78%}
+.note{font-size:11px;color:var(--text-dim)}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Two choices before the build</h1>
+    <p class="lede">The pixel office in the Cozy style is the base. What is still open: who lives in it, and whether the project gets a second way of being seen.</p>
+  </header>
+
+  <h2>1 &middot; THE PEOPLE</h2>
+  <p class="lede">Same six people in three designs. Each strip shows them standing, walking towards you, walking sideways and walking away.</p>
+  <section class="grid" id="people"></section>
+
+  <h2>2 &middot; A SECOND WAY TO SEE IT</h2>
+  <p class="lede">Not another coat of paint: four different ideas of what Agent Office is. Each one shows the same thing, four agents working and three resting.</p>
+  <section class="grid">
+    <div class="box"><h3>A &middot; THE TOWER</h3><canvas id="v1" width="200" height="156"></canvas>
+      <p>The office cut open from the side, one room per floor, a lift between them. You scroll it like a feed.</p>
+      <div class="fit"><span class="pill y">made for phones</span><span class="pill y">games and cat fit</span><span class="pill m">new layout</span></div></div>
+    <div class="box"><h3>B &middot; WINDOWS AT NIGHT</h3><canvas id="v2" width="200" height="156"></canvas>
+      <p>A building at night. Every agent is a window: lit and busy while it works, dark or flickering blue when it rests.</p>
+      <div class="fit"><span class="pill y">any screen</span><span class="pill y">calm, ambient</span><span class="pill m">no games inside</span></div></div>
+    <div class="box"><h3>C &middot; THE TERMINAL</h3><pre class="term" id="v3"></pre>
+      <p>The whole office in plain characters. Runs in a browser tab or straight in a terminal next to the agents themselves.</p>
+      <div class="fit"><span class="pill y">weightless</span><span class="pill y">developers love it</span><span class="pill m">no art</span></div></div>
+    <div class="box"><h3>D &middot; THE SHELF</h3>
+      <div class="screen"><i></i><i></i><i></i><i></i><i></i><canvas id="v4" width="240" height="46" style="border:0;background:transparent"></canvas></div>
+      <p>No office at all: a thin strip along the bottom of your screen where your agents sit, type and nap while you work.</p>
+      <div class="fit"><span class="pill y">always in view</span><span class="pill y">tiny</span><span class="pill m">desktop only</span></div></div>
+  </section>
+  <p class="note">Three more that are easy to picture without a drawing: a factory line where tasks ride a conveyor past the agents; a garden where each agent is a plant that grows while it works; a ship bridge with the agents as crew.</p>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const INK='#12132a',SHOE='#23263a';
+function tone(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;if(f<0){const k=1+f;r*=k;g*=k;b=Math.min(255,b*k-f*26);}else{r+=(255-r)*f;g+=(255-g)*f;b+=(255-b)*f*.75;}return'rgb('+(r|0)+','+(g|0)+','+(b|0)+')';}
+function spr(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');fn((X,Y,W,H,col)=>{x.fillStyle=col;x.fillRect(X|0,Y|0,W|0,H|0);});return c;}
+function inked(c){const w=c.width,h=c.height,o=document.createElement('canvas');o.width=w+2;o.height=h+2;const x=o.getContext('2d'),d=c.getContext('2d').getImageData(0,0,w,h).data;x.fillStyle=INK;
+  for(let y=0;y<h;y++)for(let X=0;X<w;X++)if(d[(y*w+X)*4+3]>40){x.fillRect(X,y+1,3,1);x.fillRect(X+1,y,1,3);}x.drawImage(c,1,1);return o;}
+const LIFT_A=[2,1,0,0,0,0],LIFT_B=[0,0,0,2,1,0],BOB=[0,1,0,0,1,0],SWING=[3,2,0,-3,-2,0];
+const DES={
+ chibi:{id:'x',name:'CHIBI',pitch:'The current one: big square head, small body. Cute, a little toy-like.',hw:12,hh:11,bw:8,bh:7,lh:4,round:[2,1],eye:'dot',blush:true,neck:0},
+ hero:{id:'y',name:'OFFICE WORKER',pitch:'Taller, with a neck, shoulders and longer legs. Clothes read clearly: tie, hoodie, stripes.',hw:10,hh:10,bw:8,bh:9,lh:8,round:[2,1],eye:'line',blush:false,neck:1},
+ kawaii:{id:'z',name:'ROUND AND TINY',pitch:'Huge round head, big shiny eyes, a body like a bean. Maximum charm, least detail on clothes.',hw:14,hh:13,bw:6,bh:5,lh:3,round:[4,2,1],eye:'big',blush:true,neck:0}};
+Object.values(DES).forEach(D=>{D.bt=2+D.hh+D.neck-1;D.foot=D.bt+D.bh+D.lh+2;});
+function guy(R,L,D,pose,dir,f,blink){const HW=D.hw,HH=D.hh,BW=D.bw,BH=D.bh,LH=D.lh,cx=10,hx=cx-HW/2,bt=D.bt,bx=cx-BW/2,ly=bt+BH,walk=pose==='walk',b=walk?BOB[f]:0;
+  const sh=L.shirt,shD=tone(sh,-.22),shL=tone(sh,.25),pa=L.pants,paD=tone(pa,-.25),sk=L.skin,skD=tone(sk,-.18),H=L.hair,HD=tone(H,-.3),HL=tone(H,.3),lw=BW>=8?3:2,gap=BW-2*lw,al=Math.max(3,BH-2);
+  if(dir<2){const a=Math.min(walk?LIFT_A[f]:0,LH-1),c=Math.min(walk?LIFT_B[f]:0,LH-1);R(bx,ly,lw,LH-a,pa);R(bx-1,ly+LH-a,lw+1,2,SHOE);R(bx+lw+gap,ly,lw,LH-c,pa);R(bx+lw+gap,ly+LH-c,lw+1,2,SHOE);R(bx+lw-1,ly,1,Math.max(1,LH-1),paD);}
+  else{const sw=Math.round((walk?SWING[f]:0)*(LH>5?1:.67)),up=walk&&(f===2||f===5)?1:0,x0=cx-1;R(x0-sw,ly,lw,LH,paD);R(x0-sw,ly+LH,lw+1,2,tone(SHOE,-.3));R(x0+sw,ly,lw,LH-up,pa);R(x0+sw,ly+LH-up,lw+1,2,SHOE);}
+  if(dir<2){R(bx,bt+b,BW,BH,sh);R(bx,bt+b,BW,1,shL);R(bx+BW-1,bt+1+b,1,BH-1,shD);R(bx,bt+BH-1+b,BW,1,shD);
+    if(L.fit==='stripe')for(let y=bt+2;y<bt+BH-1;y+=2)R(bx,y+b,BW-1,1,'#fff');
+    if(L.fit==='hood'){R(bx,bt+b,BW,2,shL);if(dir===0&&BH>6)R(cx-2,bt+BH-3+b,4,1,shD);if(dir===1)R(cx-2,bt+b,4,3,shD);}
+    if(L.fit==='tie'&&dir===0){R(cx-2,bt+b,4,1,'#fff');R(cx-1,bt+1+b,2,Math.min(4,BH-2),'#e03131');}
+    if(D.neck)R(cx-1,bt-1+b,2,1,skD);
+    let aL=0,aR=0;if(walk){aL=f<3?1:-1;aR=-aL;}R(bx-2,bt+1+b+aL,2,al,shD);R(bx-2,bt+1+al+b+aL,2,2,sk);R(bx+BW,bt+1+b+aR,2,al,shD);R(bx+BW,bt+1+al+b+aR,2,2,sk);}
+  else{const tw=Math.max(4,BW-2),tx=cx-(tw>>1);R(tx,bt+b,tw,BH,sh);R(tx,bt+b,tw,1,shL);R(tx,bt+BH-1+b,tw,1,shD);if(L.fit==='stripe')for(let y=bt+2;y<bt+BH-1;y+=2)R(tx,y+b,tw-1,1,'#fff');
+    if(D.neck)R(cx-1,bt-1+b,2,1,skD);const s=walk?-SWING[f]:0,ax=cx-1+Math.sign(s)*Math.min(2,Math.abs(s));R(ax,bt+1+b,2,al,shD);R(ax,bt+1+al+b,2,2,sk);}
+  const hy=2+b,ins=r=>r<D.round.length?D.round[r]:(HH-1-r<D.round.length?D.round[HH-1-r]:0),rows=c=>{for(let r=0;r<HH;r++)R(hx+ins(r),hy+r,HW-2*ins(r),1,c);},hr=Math.round(HH*.36),ey=hy+Math.round(HH*.56);
+  if(dir===1){rows(H);R(hx+1,hy+HH-3,HW-2,1,HD);R(hx+2,hy+HH-2,HW-4,1,HD);R(hx+3,hy+1,Math.max(2,HW/3|0),1,HL);if(L.style==='long')R(hx,hy+HH-2,HW,3,H);}
+  else{rows(sk);R(hx+ins(HH-1),hy+HH-1,HW-2*ins(HH-1),1,skD);for(let r=0;r<hr;r++)R(hx+ins(r),hy+r,HW-2*ins(r),1,H);
+    if(dir===0){const sl=Math.round(HH*.3);R(hx,hy+hr,2,sl,H);R(hx+HW-2,hy+hr,2,sl,H);if(L.style==='fringe')R(hx+2,hy+hr,Math.round(HW*.5),1,H);if(L.style==='long'){R(hx-1,hy+hr,2,HH-hr+2,H);R(hx+HW-1,hy+hr,2,HH-hr+2,H);}
+      if(L.style==='spiky'){R(hx+2,hy-1,2,1,H);R(hx+(HW>>1),hy-1,2,1,H);R(hx+HW-3,hy-1,1,1,H);}R(hx+3,hy+1,Math.max(2,HW/3|0),1,HL);R(hx+2,hy+hr-1,HW-4,1,HD);
+      const e1=hx+Math.round(HW*.22),e2=hx+HW-Math.round(HW*.22)-2;
+      if(blink){R(e1,ey+1,2,1,INK);R(e2,ey+1,2,1,INK);}else if(D.eye==='big'){R(e1,ey-1,2,3,INK);R(e2,ey-1,2,3,INK);R(e1,ey-1,1,1,'#fff');R(e2,ey-1,1,1,'#fff');}
+      else if(D.eye==='dot'){R(e1,ey,2,2,INK);R(e2,ey,2,2,INK);R(e1,ey,1,1,'#fff');R(e2,ey,1,1,'#fff');}else{R(e1+1,ey,1,2,INK);R(e2,ey,1,2,INK);}
+      if(D.blush){R(e1-1,ey+2,2,1,'#f29b9b');R(e2+1,ey+2,2,1,'#f29b9b');}if(ey+3<hy+HH-1)R(cx-1,ey+3,2,1,tone(sk,-.35));
+      if(L.acc==='glasses'){R(e1-1,ey-1,e2-e1+4,1,INK);R(e1+2,ey,e2-e1-2,1,INK);}}
+    else{R(hx,hy+hr,Math.round(HW*.5),Math.round(HH*.45),H);if(L.style==='long')R(hx,hy+hr,Math.round(HW*.4),HH-hr+2,H);R(hx+3,hy+1,Math.max(2,HW/3|0),1,HL);
+      const e=hx+HW-Math.round(HW*.22)-1;if(blink)R(e,ey+1,2,1,INK);else if(D.eye==='big'){R(e,ey-1,2,3,INK);R(e+1,ey-1,1,1,'#fff');}else if(D.eye==='dot'){R(e,ey,2,2,INK);R(e+1,ey,1,1,'#fff');}else R(e+1,ey,1,2,INK);
+      if(D.blush)R(e-1,ey+2,2,1,'#f29b9b');if(L.acc==='glasses')R(e-1,ey-1,4,1,INK);}}
+  if(L.style==='bun'){R(cx-2,hy-2,4,3,H);R(cx-1,hy-2,2,1,HL);}
+  if(L.acc==='cap'){const C='#e0af68';R(hx+ins(0),hy,HW-2*ins(0),1,C);R(hx+ins(1),hy+1,HW-2*ins(1),hr-1,C);R(hx+3,hy+1,3,1,tone(C,.3));if(dir===0)R(hx,hy+hr,HW,1,tone(C,-.25));if(dir>1)R(hx+(HW>>1),hy+hr,(HW>>1)+2,1,tone(C,-.25));}
+  if(L.acc==='phones'){R(hx+2,hy-1,HW-4,1,INK);if(dir<2){R(hx-2,hy+3,2,4,'#f7768e');R(hx+HW,hy+3,2,4,'#f7768e');}else R(hx+2,hy+3,3,4,'#f7768e');}}
+const cache=new Map();
+function guySprite(L,D,pose,dir,f,blink){const k=D.id+L.id+pose+dir+f+(blink?1:0);let s=cache.get(k);if(s)return s;let c=spr(20,34,R=>guy(R,L,D,pose,dir>2?2:dir,f,blink));
+  if(dir===3){const m=document.createElement('canvas');m.width=20;m.height=34;const x=m.getContext('2d');x.translate(20,0);x.scale(-1,1);x.drawImage(c,0,0);c=m;}s=inked(c);cache.set(k,s);return s;}
+const P=[
+ {id:'bug',name:'Bug-Hunt',skin:'#f1c9a5',hair:'#5a3d2a',shirt:'#f7768e',pants:'#2e3350',style:'fringe',acc:'glasses',fit:'tie'},
+ {id:'heisen',name:'Heisen-X',skin:'#8d5a3b',hair:'#23263a',shirt:'#9ece6a',pants:'#2e3350',style:'short',acc:'phones',fit:'hood'},
+ {id:'blanky',name:'Blanky',skin:'#f6d7b8',hair:'#d9a441',shirt:'#7aa2f7',pants:'#3a2e55',style:'bun',acc:'',fit:'stripe'},
+ {id:'grid',name:'Grid-G',skin:'#c98a5e',hair:'#7b4bd6',shirt:'#e0af68',pants:'#23263a',style:'short',acc:'cap',fit:'hood'},
+ {id:'commit',name:'Commit-D',skin:'#f1c9a5',hair:'#e8e2d4',shirt:'#bb9af7',pants:'#2e3350',style:'long',acc:'glasses',fit:''},
+ {id:'arches',name:'Arches',skin:'#6b4630',hair:'#23263a',shirt:'#39c5cf',pants:'#3a2e55',style:'spiky',acc:'',fit:'tie'}];
+
+// ── 1: people sheets ────────────────────────────────────────────
+const sheets=[];
+Object.entries(DES).forEach(([key,D])=>{const box=document.createElement('div');box.className='box';const c=document.createElement('canvas');c.width=6*24+4;c.height=4*36+2;
+  box.innerHTML='<h3>'+D.name+'</h3>';box.appendChild(c);const p=document.createElement('p');p.textContent=D.pitch;box.appendChild(p);$('#people').appendChild(box);sheets.push({D,x:c.getContext('2d')});});
+function drawSheets(T){sheets.forEach(s=>{const x=s.x,D=s.D;x.imageSmoothingEnabled=false;x.fillStyle='#c99d6c';x.fillRect(0,0,148,146);for(let r=0;r<4;r++){x.fillStyle=r%2?'#c2935f':'#d0a674';x.fillRect(0,r*36,148,36);x.fillStyle='#8a5a34';x.fillRect(0,r*36+35,148,1);}
+  P.forEach((L,i)=>{const f=Math.floor(T*8)%6,bl=((T*1000+i*977)%3600)<150,X=4+i*24,base=r=>r*36+32-D.foot;
+    [[0,'idle',0],[1,'walk',0],[2,'walk',i%2?3:2],[3,'walk',1]].forEach(v=>{x.fillStyle='rgba(18,19,42,.28)';x.fillRect(X+5,v[0]*36+31,12,3);x.drawImage(guySprite(L,D,v[1],v[2],v[1]==='walk'?f:0,v[1]==='idle'&&bl),X,base(v[0]));});});});}
+
+// ── 2: visions ──────────────────────────────────────────────────
+const X=DES.chibi,g1=$('#v1').getContext('2d'),g2=$('#v2').getContext('2d'),g4=$('#v4').getContext('2d');
+const put=(g,L,pose,dir,f,x,baseY,bl)=>g.drawImage(guySprite(L,X,pose,dir,f,bl),Math.round(x)-11,baseY-X.foot-1);
+function tower(T){const g=g1;g.imageSmoothingEnabled=false;g.fillStyle='#8fd0ff';g.fillRect(0,0,200,156);g.fillStyle='#cfeaff';g.fillRect(20,14,34,6);g.fillRect(140,26,40,6);g.fillStyle='#5b8f4e';g.fillRect(0,148,200,8);
+  g.fillStyle=INK;g.fillRect(22,6,156,144);const fl=[10,56,102];fl.forEach((y,i)=>{g.fillStyle=['#343b6b','#3a2a5c','#4a4d66'][i];g.fillRect(24,y,152,42);g.fillStyle=['#c99d6c','#5a2238','#d8d2c2'][i];g.fillRect(24,y+36,152,6);g.fillStyle='#232847';g.fillRect(24,y+42,152,4);});
+  g.fillStyle='#14162c';g.fillRect(24,10,20,138);const cab=10+Math.round((Math.sin(T*.5)*.5+.5)*92);g.fillStyle='#e0af68';g.fillRect(26,cab+8,16,28);g.fillStyle='#2a2e44';g.fillRect(33,cab+8,2,28);g.fillStyle='#8b90a8';g.fillRect(33,8,2,cab);
+  // work floor
+  [[62,P[2]],[98,P[3]],[134,P[1]]].forEach((d,i)=>{put(g,d[1],'idle',0,0,d[0]+8,46+(Math.floor(T*10+i)%2?0:0),false);g.fillStyle=INK;g.fillRect(d[0]-3,30,24,2);g.fillStyle='#f2ede2';g.fillRect(d[0]-2,31,22,4);g.fillStyle='#c9c0ae';g.fillRect(d[0]-2,35,22,11);g.fillStyle='#1c2036';g.fillRect(d[0]+2,22,12,9);g.fillStyle=['#7aa2f7','#9ece6a','#bb9af7'][(Math.floor(T*6)+i)%3];g.fillRect(d[0]+4,24,3+(Math.floor(T*8+i)%5),1);g.fillRect(d[0]+4,27,6,1);});
+  g.fillStyle='#8fd0ff';g.fillRect(52,14,10,8);g.fillRect(160,14,10,8);
+  // fun floor
+  g.fillStyle='#ff4fd8';g.fillRect(52,60,24,6);g.fillStyle='#3a2a7a';g.fillRect(150,66,14,26);g.fillStyle=Math.floor(T*4)%2?'#7cff6b':'#39d3ff';g.fillRect(152,69,10,8);g.fillStyle='#4d63c9';g.fillRect(86,78,40,14);g.fillStyle='#6a7fe0';g.fillRect(88,74,36,6);
+  put(g,P[5],'walk',Math.sin(T*.6)>0?2:3,Math.floor(T*8)%6,60+((Math.sin(T*.6)*.5+.5)*80),92,false);const cx=120-((T*9)%70);g.fillStyle=INK;g.fillRect(cx-1,85,12,8);g.fillStyle='#f08a3c';g.fillRect(cx,86,10,5);g.fillRect(cx,84,3,3);g.fillRect(cx+9,84+(Math.floor(T*3)%2),2,3);
+  // kitchen floor
+  g.fillStyle='#e9e2d4';g.fillRect(120,118,40,20);g.fillStyle='#3a3f5c';g.fillRect(120,116,40,3);g.fillStyle='#2a2e44';g.fillRect(126,106,9,10);g.fillStyle='#dfe3ee';g.fillRect(162,104,12,34);g.fillStyle='#8a5a36';g.fillRect(48,122,4,16);g.fillRect(46,138,12,0);g.fillStyle='#b98450';g.fillRect(44,112,2,26);
+  put(g,P[4],'idle',0,0,112,138,((T*1000)%3000)<150);put(g,P[0],'walk',2,Math.floor(T*8)%6,50+((T*14)%60),138,false);}
+const WIN=[];for(let r=0;r<4;r++)for(let c=0;c<3;c++)WIN.push({x:44+c*40,y:30+r*28,who:[0,1,-1,2,-1,3,-2,-1,4,-1,5,-3][r*3+c]});
+function night(T){const g=g2;g.imageSmoothingEnabled=false;const gr=g.createLinearGradient(0,0,0,156);gr.addColorStop(0,'#0b1030');gr.addColorStop(1,'#2a2458');g.fillStyle=gr;g.fillRect(0,0,200,156);
+  g.fillStyle='#fff';[[12,10],[30,40],[180,18],[166,60],[20,84],[190,96],[100,8],[150,6]].forEach((s,i)=>{if((Math.floor(T*2)+i)%7)g.fillRect(s[0],s[1],1,1);});g.fillStyle='#f6f1d0';g.fillRect(160,22,12,12);g.fillStyle='#0b1030';g.fillRect(164,20,10,10);
+  g.fillStyle='#151833';g.fillRect(0,120,34,36);g.fillRect(170,104,30,52);g.fillStyle='#1c2040';g.fillRect(36,22,128,134);g.fillStyle='#2a2f5c';g.fillRect(34,20,132,4);g.fillStyle='#11142b';g.fillRect(96,10,2,10);g.fillStyle=Math.floor(T*1.5)%2?'#ff4b4b':'#5a1a1a';g.fillRect(96,8,2,2);
+  WIN.forEach((w,i)=>{g.fillStyle='#0f1126';g.fillRect(w.x-1,w.y-1,30,22);if(w.who>=0&&w.who<4){const L=P[w.who],bob=Math.floor(T*(7+i))%2;g.fillStyle='#ffd39a';g.fillRect(w.x,w.y,28,20);g.fillStyle='#fff0cf';g.fillRect(w.x,w.y,28,3);
+      g.fillStyle=tone(L.hair,-.2);g.fillRect(w.x+9,w.y+6+bob,8,7);g.fillStyle=tone(L.shirt,-.25);g.fillRect(w.x+7,w.y+13+bob,12,7);g.fillStyle='#1c2036';g.fillRect(w.x+18,w.y+9,8,7);g.fillStyle=['#7aa2f7','#9ece6a'][(Math.floor(T*6)+i)%2];g.fillRect(w.x+19,w.y+11,5,1);g.fillStyle='#3f9b5b';if(i%2)g.fillRect(w.x+2,w.y+13,3,7);}
+    else if(w.who>=4){g.fillStyle=(Math.sin(T*9+i)+Math.sin(T*3.7))>.4?'#5c8dff':'#33407a';g.fillRect(w.x,w.y,28,20);g.fillStyle='#1c2040';g.fillRect(w.x+8,w.y+11,12,9);g.fillRect(w.x+11,w.y+7,6,5);}
+    else if(w.who===-2){g.fillStyle='#232a55';g.fillRect(w.x,w.y,28,20);g.fillStyle='#c8d3f5';const p=(T*.4)%1;g.fillRect(w.x+10+p*8,w.y+12-p*8,3,1);g.fillRect(w.x+11+p*8,w.y+13-p*8,1,1);g.fillRect(w.x+10+p*8,w.y+14-p*8,3,1);}
+    else if(w.who===-3){g.fillStyle='#232a55';g.fillRect(w.x,w.y,28,20);g.fillStyle='#f08a3c';g.fillRect(w.x+10,w.y+13,8,7);g.fillRect(w.x+10,w.y+10,2,3);g.fillRect(w.x+16,w.y+10,2,3);g.fillStyle='#ffe066';g.fillRect(w.x+12,w.y+15,1,1);g.fillRect(w.x+15,w.y+15,1,1);}
+    else{g.fillStyle='#171a36';g.fillRect(w.x,w.y,28,20);}g.fillStyle='#2a2f5c';g.fillRect(w.x+13,w.y,2,20);g.fillRect(w.x-1,w.y+20,30,2);});
+  g.fillStyle='#0b0d22';g.fillRect(0,150,200,6);g.fillStyle='#ffd39a';g.fillRect(16,128,2,22);g.fillRect(14,126,6,3);g.fillStyle='rgba(255,211,154,.18)';g.fillRect(8,130,18,20);}
+function shelf(T){const g=g4;g.imageSmoothingEnabled=false;g.clearRect(0,0,240,46);g.fillStyle='#6e4526';g.fillRect(0,36,240,10);g.fillStyle='#a8713f';g.fillRect(0,34,240,4);g.fillStyle='#c99d6c';g.fillRect(0,34,240,1);
+  [[24,0],[62,1],[100,2],[138,3]].forEach((s,i)=>{put(g,P[s[1]],'idle',0,0,s[0],40,((T*1000+i*900)%3300)<150);g.fillStyle=INK;g.fillRect(s[0]-8,25,16,10);g.fillStyle='#c9ccd8';g.fillRect(s[0]-7,26,14,8);g.fillStyle=['#7aa2f7','#9ece6a','#bb9af7','#e0af68'][(Math.floor(T*7)+i)%4];g.fillRect(s[0]-5,28,4+(Math.floor(T*9+i)%6),1);g.fillRect(s[0]-5,31,7,1);});
+  const cx=170+Math.round(Math.sin(T*.5)*40),fl=Math.cos(T*.5)<0;g.fillStyle=INK;g.fillRect(cx-1,25,14,10);g.fillStyle='#f08a3c';g.fillRect(cx,27,12,6);g.fillRect(fl?cx:cx+8,24,4,4);g.fillRect(fl?cx+11:cx-1,25+(Math.floor(T*3)%2),2,3);g.fillRect(cx+1,33,2,1);g.fillRect(cx+9,33,2,1);
+  g.fillStyle='#4d63c9';g.fillRect(200,24,34,10);g.fillStyle=tone(P[4].shirt,0);g.fillRect(208,20,16,6);g.fillStyle=P[4].skin;g.fillRect(202,19,7,7);g.fillStyle='#c8d3f5';const p=(T*.4)%1;g.fillRect(212+p*8,14-p*8,3,1);g.fillRect(213+p*8,15-p*8,1,1);g.fillRect(212+p*8,16-p*8,3,1);}
+function term(T){const t=Math.floor(T*4),h=['o/','\\\\o','o_','_o'],k=i=>h[(t+i)%4].padEnd(3),bar=(n,i)=>{const v=(n+((t+i)%3))%10;return'#'.repeat(v)+'.'.repeat(10-v);},cat=14+((t>>1)%22),d=new Date();
+  const row=(s)=>' | '+s.padEnd(54)+' |';
+  $('#v3').textContent=[' AGENT OFFICE   4 working   3 on a break        '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),' +'+'-'.repeat(56)+'+',
+   row(' [==]      [==]      [==]      [  ]        .---.  coffee'),row('  '+k(0)+'       '+k(1)+'       '+k(2)+'       zz         |:::|  ['+(t%2?'~':' ')+']'),row('  /|        /|        /|        _\\_        \'---\''),row(' blanky    grid-g    heisen    bug-hunt'),
+   row(''),row(' '.repeat(cat)+'=^.^='+(t%2?'~':'-')),row('  ___________________      '+(t%8<4?'\\o/':' o ')+'  arches at the whiteboard'),row(' |  blocky   z Z z   |      |'),row(' |___________________|     / \\'),' +'+'-'.repeat(56)+'+',
+   ' > blanky    editing             14m  ['+bar(7,0)+']',' > grid-g    running a command    6m  ['+bar(3,1)+']',' > heisen    typing               9m  ['+bar(5,2)+']',' > commit-d  on a coffee run      2m  ['+bar(1,3)+']'].join('\n');}
+function frame(ts){requestAnimationFrame(frame);const T=ts/1000;drawSheets(T);tower(T);night(T);shelf(T);if(!frame.n||ts-frame.n>240){frame.n=ts;term(T);}}
+requestAnimationFrame(frame);
+})();
+</script>

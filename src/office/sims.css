@@ -1,0 +1,57 @@
+#simsBtn[aria-pressed='true'] {
+  background: #7cff6b;
+  border-color: #7cff6b;
+}
+.simsbar {
+  position: absolute;
+  left: var(--l);
+  right: calc(var(--r) + 172px);
+  bottom: calc(var(--b) + 34px);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-color: #2f7a47;
+}
+.simsnow {
+  font-size: 11px;
+  color: var(--text-hi);
+  min-height: 1.5em;
+}
+.simsnow::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 9px;
+  background: #7cff6b;
+  margin-right: 8px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.simsrow {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.simschips {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.simschip {
+  flex: none;
+  border-color: #2f7a47;
+  color: #7cff6b;
+}
+.simschip[aria-pressed='true'] {
+  background: #7cff6b;
+  border-color: #7cff6b;
+  color: #07081a;
+}
+@media (max-width: 760px) {
+  .simsbar {
+    right: var(--r);
+  }
+}

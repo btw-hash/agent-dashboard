@@ -1,107 +1,101 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <title>Agent Office</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-</head>
-<body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Agent Office</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <section class="stage" id="stage" aria-label="Office">
+        <canvas id="cv"></canvas>
+        <div class="tags" id="tags"></div>
+      </section>
 
-<div id="loading-screen">
-  <div class="loading-logo">▶ AGENT OFFICE</div>
-  <canvas id="loading-canvas" width="320" height="80"></canvas>
-  <div class="loading-status" id="loading-status">BOOTING SYSTEM...</div>
-</div>
+      <header class="bar ui">
+        <div class="brand panel">
+          <b>AGENT OFFICE</b>
+          <em id="modeTag" hidden>DEMO</em>
+          <div class="count" id="count"></div>
+        </div>
+        <div class="grow"></div>
+        <div class="tools" id="tools">
+          <button class="btn" id="clock" title="Time of day"></button>
+          <button class="btn" id="zout" aria-label="Zoom out">&minus;</button>
+          <button class="btn" id="zin" aria-label="Zoom in">+</button>
+          <button class="btn" id="teamBtn" aria-pressed="false">Team</button>
+          <button class="btn" id="tvBtn">TV mode</button>
+          <button class="btn go" id="connectBtn">Connect yours</button>
+        </div>
+      </header>
 
-<div id="settings-backdrop"></div>
-<div id="leaderboard-backdrop"></div>
-<div id="leaderboard-panel">
-  <div class="lb-header">
-    <span>🏆 LEADERBOARD</span>
-    <button class="lb-close" id="lb-close">×</button>
-  </div>
-  <div class="lb-tabs" id="lb-tabs"></div>
-  <div class="lb-body" id="lb-body"></div>
-</div>
-<div id="settings-panel">
-  <div class="settings-header">
-    <span>⚙ SETTINGS</span>
-    <button class="settings-close" id="settings-close">×</button>
-  </div>
-  <div class="settings-body">
-    <div class="settings-row"><span>SOUND</span><div class="toggle on" data-key="sound"></div></div>
-    <div class="settings-row"><span>PARTICLES</span><div class="toggle on" data-key="particles"></div></div>
-    <div class="settings-row"><span>ANIMATIONS</span><div class="toggle on" data-key="animations"></div></div>
-  </div>
-</div>
+      <aside class="roster panel ui" id="roster" aria-label="Team">
+        <h2><span>TEAM</span><span id="teamN"></span></h2>
+        <ul id="list"></ul>
+      </aside>
 
-<header>
-  <div class="hz hz-logo">
-    <span class="logo">▶ AGENT OFFICE <span class="blink">_</span></span>
-  </div>
-  <div class="hz hz-utils">
-    <button id="btn-leaderboard">🏆 TOP</button>
-    <button id="btn-settings">⚙ SET</button>
-  </div>
-  <div class="hz hz-info">
-    <span id="agent-count" class="agent-count">0 agents</span>
-    <div class="tunnel-status" id="tunnel-status" title="tunnel offline">
-      <span class="led off"></span>
-      <span class="tunnel-label">tunnel</span>
+      <aside class="card panel ui" id="card" hidden></aside>
+      <div class="mini panel ui">
+        <canvas id="mini" width="160" height="90" aria-label="Minimap"></canvas>
+      </div>
+      <div class="ticker panel ui"><em>NEWS</em><span id="news"></span></div>
+      <div class="toasts ui" id="toasts"></div>
+
+      <div class="tvcap" id="tvcap" hidden><b id="tvA"></b><span id="tvB"></span></div>
+      <div class="tvclock" id="tvclock" hidden></div>
+      <button class="btn tvx" id="tvX" hidden>Exit TV</button>
+
+      <div class="veil" id="veil" hidden>
+        <div class="sheet panel" role="dialog" aria-labelledby="shT">
+          <div class="row between">
+            <h2 id="shT">CONNECT YOUR AGENTS</h2>
+            <button class="btn" id="shX">Close</button>
+          </div>
+          <div class="way first">
+            <h3>1 &middot; Claude Code on this machine</h3>
+            <p>
+              Reads your local session logs. Nothing about the work leaves your computer: no project
+              names, no file paths, no message text.
+            </p>
+            <div class="code">
+              <pre id="c1">npx agent-office</pre>
+              <button class="btn cp" data-c="c1">Copy</button>
+            </div>
+          </div>
+          <div class="way">
+            <h3>2 &middot; Any bot or script</h3>
+            <p>One request per state change. States: working, thinking, idle, done, error.</p>
+            <div class="code">
+              <pre id="c2">
+curl -X POST http://localhost:3737/api/event \
+  -H "Content-Type: application/json" \
+  -d '{"agent":"my-bot","state":"working","note":"crunching"}'</pre
+              >
+              <button class="btn cp" data-c="c2">Copy</button>
+            </div>
+          </div>
+          <div class="way">
+            <h3>3 &middot; Try it here</h3>
+            <p id="tryLede">Send an event and watch who walks out of the lift.</p>
+            <div class="try">
+              <input id="tryName" value="my-bot" maxlength="14" aria-label="Agent name" />
+              <button class="btn go st" data-s="working">working</button>
+              <button class="btn st" data-s="thinking">thinking</button>
+              <button class="btn st" data-s="done">done</button>
+              <button class="btn st" data-s="error">error</button>
+              <button class="btn st" data-s="idle">idle</button>
+            </div>
+            <p id="tryMsg"></p>
+          </div>
+        </div>
+      </div>
     </div>
-    <a id="public-url" class="loading" href="#" target="_blank" style="display:none"></a>
-  </div>
-</header>
-
-<div class="canvas-toolbar" id="canvas-toolbar"></div>
-<div class="canvas-wrapper">
-  <div class="canvas-stack" id="canvas-stack" style="--canvas-cw:1400;--canvas-ox:180">
-    <canvas id="office" width="1400" height="600"></canvas>
-    <div id="left-panel-overlay" class="canvas-overlay-panel left" aria-label="Agents panel">
-      <div class="lpo-title">◈ AGENTS</div>
-      <ul class="lpo-list" id="lpo-list"></ul>
-      <div class="lpo-footer" id="lpo-footer">0/0 working</div>
-    </div>
-    <div id="right-panel-overlay" class="canvas-overlay-panel right" aria-label="Stats panel">
-      <div class="rpo-title">◈ STATS</div>
-      <div class="rpo-row"><span class="rpo-label">UPTIME</span><span class="rpo-val rpo-uptime" id="rpo-uptime">00:00:00</span></div>
-      <div class="rpo-row"><span class="rpo-label">ONLINE</span><span class="rpo-val rpo-online" id="rpo-online">0</span></div>
-      <div class="rpo-row"><span class="rpo-label">WORKING</span><span class="rpo-val rpo-working" id="rpo-working">0</span></div>
-      <div class="rpo-row"><span class="rpo-label">IDLE</span><span class="rpo-val rpo-idle" id="rpo-idle">0</span></div>
-      <div class="rpo-divider"></div>
-      <div class="rpo-row"><span class="rpo-label">CAT</span><span class="rpo-val" id="rpo-cat">—</span></div>
-      <div class="rpo-row"><span class="rpo-label">GOOSE</span><span class="rpo-val" id="rpo-goose">—</span></div>
-      <div class="rpo-divider"></div>
-      <div class="rpo-label rpo-activity-label">ACTIVITY</div>
-      <div class="rpo-bar-track"><div class="rpo-bar" id="rpo-bar" style="width:0%"></div></div>
-    </div>
-  </div>
-</div>
-
-<div id="grid">
-  <div id="mood-meter">
-    <div class="mm-header">
-      <span class="mm-label">📊 OFFICE MOOD</span>
-      <span id="mm-emoji" class="mm-emoji">😐</span>
-      <span id="mm-level" class="mm-level">CHILL</span>
-    </div>
-    <div class="mm-bar-track">
-      <div id="mm-bar" class="mm-bar" style="width:0%"></div>
-      <span id="mm-pct" class="mm-pct">0%</span>
-    </div>
-    <div id="mm-stats" class="mm-stats">— no agents —</div>
-  </div>
-</div>
-
-<div class="conn">
-  <div class="led" id="led"></div>
-  <span id="conn-label">connecting</span>
-</div>
-
-
-<script type="module" src="./main.js"></script>
-</body>
+    <script type="module" src="./office/main.js"></script>
+  </body>
 </html>
