@@ -6,6 +6,7 @@
 ## Context
 
 Agent Dashboard needs:
+
 - Long-lived WebSocket server for live agent state sync
 - Filesystem watcher on `~/.claude/projects/*.jsonl` (local-to-cloud bridge)
 - Background scheduler (cron-style sprint runs)
@@ -20,12 +21,14 @@ Host on Railway. Push `main` → auto-deploy. PRs open preview environments via 
 ## Consequences
 
 **Positive:**
+
 - WebSockets work without workarounds
 - Preview URLs per PR — breaking spring doesn't hit prod
 - Background scheduler runs as a normal long-lived process
 - Similar UX to Vercel (git-push deploy)
 
 **Negative:**
+
 - Railway cold-start a bit slower than Vercel edge
 - No built-in CDN for static assets (not an issue — single canvas app)
 - Separate billing and dashboard from the rest of the stack

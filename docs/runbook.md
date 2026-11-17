@@ -18,11 +18,13 @@ node server.js       # port 3737
 ```bash
 node sync-to-cloud.js https://agent-dashboard-production-a178.up.railway.app
 ```
+
 Or Windows Scheduled Task `DashboardSync_autostart` runs this on login.
 
 ## Sprint flow
 
 Manual:
+
 ```bash
 cd /c/AI/agent-dashboard
 TS=$(date '+%Y-%m-%d_%H-%M')
@@ -52,6 +54,7 @@ See `project_sprint_preview_flow.md` in memory for full details.
 ## Incidents
 
 No formal on-call. If prod down:
+
 1. Check Railway dashboard
 2. Check `server.log` via Railway UI
 3. If sync is broken: restart sync daemon locally

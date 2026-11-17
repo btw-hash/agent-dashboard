@@ -12,18 +12,22 @@ _(empty — add one per feature in progress)_
 # <Feature name>
 
 ## Requirements
+
 - REQ-1: <what success looks like>
 - REQ-2: ...
 
 ## Design
+
 - SVC-N: <service/module>
 - Data model, contracts, key decisions
 
 ## Tasks
+
 - TASK-1: <concrete step>
 - TASK-2: ...
 
 ## Status
+
 - started: YYYY-MM-DD
 - conflict-check: last run YYYY-MM-DD
 ```
