@@ -2,7 +2,8 @@
 // The clip is a recording of the real v2 client (tag v2-classic): its whole page, office and
 // panels, in a window tall enough to need no scrolling, so it is shown whole, never cropped.
 const SHOW_MS = 2400,
-  FLASH_MS = 160;
+  FLASH_MS = 160,
+  BASE = import.meta.env.BASE_URL;
 
 export function installClassic(office) {
   const app = document.querySelector('#app');
@@ -11,7 +12,8 @@ export function installClassic(office) {
   view.className = 'classic';
   view.hidden = true;
   view.innerHTML =
-    '<video muted playsinline preload="none" poster="/classic-poster.jpg"><source src="/classic.webm" type="video/webm"></video>' +
+    // the page may be served from a sub-path (a demo on a static host)
+    `<video muted playsinline preload="none" poster="${BASE}classic-poster.jpg"><source src="${BASE}classic.webm" type="video/webm"></video>` +
     '<b>CLASSIC &middot; V2</b>';
   const flash = document.createElement('div');
   flash.className = 'flash';
