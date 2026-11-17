@@ -344,7 +344,7 @@
 .gamelist {
   position: absolute;
   left: var(--l);
-  top: calc(var(--t) + 46px);
+  top: var(--top);
   width: 420px;
   max-width: calc(100% - 20px);
   max-height: calc(100% - 150px);

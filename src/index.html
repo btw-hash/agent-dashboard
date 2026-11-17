@@ -19,24 +19,29 @@
       </section>
 
       <header class="bar ui">
-        <div class="brand panel">
+        <div class="brand">
           <b>AGENT OFFICE</b>
           <em id="modeTag" hidden>DEMO</em>
           <div class="count" id="count"></div>
+          <a class="by" href="https://btwstudio.dev" target="_blank" rel="noopener"
+            >by BTW Studio</a
+          >
         </div>
-        <div class="grow"></div>
+        <button class="btn go" id="connectBtn">CONNECT YOUR AGENTS</button>
         <div class="tools" id="tools">
           <button class="btn" id="clock" title="Time of day"></button>
           <button class="btn" id="zout" aria-label="Zoom out">&minus;</button>
           <button class="btn" id="zin" aria-label="Zoom in">+</button>
           <button class="btn" id="teamBtn" aria-pressed="false">Team</button>
           <button class="btn" id="tvBtn">TV mode</button>
-          <button class="btn go" id="connectBtn">Connect yours</button>
         </div>
       </header>
 
       <aside class="roster panel ui" id="roster" aria-label="Team">
-        <h2><span>TEAM</span><span id="teamN"></span></h2>
+        <h2>
+          <span>TEAM</span><span id="teamN"></span
+          ><button class="pclose" aria-label="Close">&times;</button>
+        </h2>
         <ul id="list"></ul>
       </aside>
 

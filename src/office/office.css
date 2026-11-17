@@ -20,6 +20,8 @@
   --r: max(10px, env(safe-area-inset-right, 0px));
   --t: calc(10px + env(safe-area-inset-top, 0px));
   --b: calc(10px + env(safe-area-inset-bottom, 0px));
+  /* where the panels under the bar start; the shell keeps it at the bar's real height */
+  --top: 108px;
 }
 * {
   box-sizing: border-box;
@@ -129,31 +131,55 @@ input:focus-visible {
   font-weight: 700;
 }
 
+/* The bar is one band in two rows: the name, who made it and the one loud button on top,
+   a quiet row of tools under them. */
 .bar {
   position: absolute;
-  top: var(--t);
-  left: var(--l);
-  right: var(--r);
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 8px
+    max(12px, env(safe-area-inset-left, 0px));
+  background: var(--glass);
+  border-bottom: 1px solid var(--border-hi);
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  align-items: stretch;
-  pointer-events: none;
-}
-.bar > * {
-  pointer-events: auto;
+  gap: 8px 10px;
+  align-items: center;
 }
 .brand {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
+  gap: 2px 10px;
 }
 .brand b {
   font-family: var(--pixel);
-  font-size: 10px;
+  font-size: 13px;
   color: var(--text-hi);
   font-weight: 400;
+}
+.brand .by {
+  flex-basis: 100%;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-decoration: none;
+}
+.brand .by:hover,
+.brand .by:focus-visible {
+  color: var(--text-hi);
+  text-decoration: underline;
+}
+#connectBtn {
+  font-family: var(--pixel);
+  font-size: 9px;
+  font-weight: 400;
+  padding: 9px 14px 7px;
+  box-shadow:
+    0 0 0 2px #05060d,
+    0 0 18px rgba(122, 162, 247, 0.75);
 }
 .brand em {
   font-style: normal;
@@ -188,21 +214,45 @@ input:focus-visible {
 .dot.t {
   background: var(--think);
 }
-.grow {
-  flex: 1 1 0;
-  min-width: 0;
-}
 .tools {
+  flex-basis: 100%;
   display: flex;
-  gap: 6px;
+  gap: 2px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+.tools .btn {
+  background: none;
+  border-color: transparent;
+  color: var(--text-dim);
+}
+.tools .btn:hover,
+.tools .btn[aria-pressed='true'] {
+  background: var(--surface-2);
+  border-color: var(--border-hi);
+  color: var(--text-hi);
+  font-weight: 400;
+}
+/* the close button every panel under the bar carries */
+.pclose {
+  flex: none;
+  margin-left: 8px;
+  padding: 0 6px 1px;
+  font: 13px/1.3 var(--font);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.pclose:hover {
+  color: var(--text-hi);
+  border-color: var(--border-hi);
 }
 
 .roster {
   position: absolute;
   left: var(--l);
-  top: calc(var(--t) + 46px);
+  top: var(--top);
   width: 206px;
   max-height: calc(100% - 150px);
   display: none;
@@ -219,8 +269,12 @@ input:focus-visible {
   font-weight: 400;
   color: var(--accent);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+}
+.roster h2 span:first-child,
+.gamelist h2 span:first-child,
+.evlist h2 span:first-child {
+  margin-right: auto;
 }
 .roster ul {
   list-style: none;
@@ -262,7 +316,7 @@ input:focus-visible {
 .card {
   position: absolute;
   right: var(--r);
-  top: calc(var(--t) + 46px);
+  top: var(--top);
   width: min(250px, calc(100% - 20px));
   padding: 12px;
   display: flex;
@@ -385,7 +439,7 @@ input:focus-visible {
 .toasts {
   position: absolute;
   left: 50%;
-  top: calc(var(--t) + 52px);
+  top: calc(var(--top) + 6px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -559,14 +613,17 @@ input:focus-visible {
   .count span:nth-child(3) {
     display: none;
   }
-  .grow {
-    display: none;
+  .brand b {
+    font-size: 10px;
+  }
+  /* the loud button gets a row of its own, where a thumb finds it */
+  #connectBtn {
+    flex: 1 1 100%;
+    text-align: center;
   }
   /* one row that scrolls sideways: nine buttons would otherwise cover a third of the office */
   .tools {
-    justify-content: flex-start;
-    width: 100%;
-    gap: 4px;
+    gap: 2px;
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
@@ -576,9 +633,6 @@ input:focus-visible {
   }
   .btn {
     padding: 6px 7px;
-  }
-  .toasts {
-    top: calc(var(--t) + 86px);
   }
 }
 @media (prefers-reduced-motion: reduce) {

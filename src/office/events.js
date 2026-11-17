@@ -1,4 +1,5 @@
 import './events.css';
+import { panel, CLOSE } from './shell/panels.js';
 import { INK, LW, LH, text, hexA } from './engine/pixel.js';
 import { NODE, WINS, bfs } from './world/plan.js';
 import { SK } from './world/cast.js';
@@ -103,7 +104,9 @@ export function installEvents(office, shell) {
     list.innerHTML =
       '<h2><span>EVENTS</span><span id="evNow">' +
       (cur ? 'RUNNING' : 'QUIET') +
-      '</span></h2>' +
+      '</span>' +
+      CLOSE +
+      '</h2>' +
       KINDS.map(
         (k) =>
           '<div class="evg"><h3>' +
@@ -143,10 +146,14 @@ export function installEvents(office, shell) {
       (cur ? cur.label : 'Pick something to run it by hand.') +
       '</p>';
   }
+  const listOpened = panel(office, 'events', list, () => setList(false));
   function setList(on) {
     list.hidden = !on;
     btn.setAttribute('aria-pressed', on);
-    if (on) drawList();
+    if (on) {
+      drawList();
+      listOpened();
+    }
   }
   btn.onclick = () => setList(list.hidden);
   list.addEventListener('click', (e) => {

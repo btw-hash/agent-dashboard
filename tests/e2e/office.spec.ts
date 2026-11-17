@@ -52,6 +52,35 @@ test('team list, agent card and TV mode', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('a panel closes by its own button and by Escape, and one is open at a time', async ({
+  page,
+}) => {
+  const errors = await open(page);
+  const panels: [string, string][] = [
+    ['#teamBtn', '#roster'],
+    ['#gamesBtn', '.gamelist'],
+    ['#simsBtn', '.simsbar'],
+    ['#eventsBtn', '.evlist'],
+  ];
+  for (const [btn, sel] of panels) {
+    await page.click(btn);
+    await expect(page.locator(sel)).toBeVisible();
+    await page.click(sel + ' .pclose');
+    await expect(page.locator(sel)).toBeHidden();
+    await page.click(btn);
+    await page.keyboard.press('Escape');
+    await expect(page.locator(sel)).toBeHidden();
+  }
+  await page.click('#gamesBtn');
+  await page.click('#eventsBtn');
+  await expect(page.locator('.gamelist')).toBeHidden();
+  await expect(page.locator('.evlist')).toBeVisible();
+  // the loud button is on screen on a phone too, not at the far end of a scrolling row
+  await page.setViewportSize({ width: 390, height: 780 });
+  await expect(page.locator('#connectBtn')).toBeInViewport();
+  expect(errors).toEqual([]);
+});
+
 test('a game opens in the cabinet, plays and keeps its score', async ({ page }) => {
   const errors = await open(page);
   await page.click('#gamesBtn');

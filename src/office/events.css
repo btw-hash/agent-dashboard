@@ -2,7 +2,7 @@
 .evlist {
   position: absolute;
   right: var(--r);
-  top: calc(var(--t) + 46px);
+  top: var(--top);
   width: 330px;
   max-width: calc(100% - 20px);
   max-height: calc(100% - 150px);

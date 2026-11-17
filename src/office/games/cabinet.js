@@ -1,6 +1,7 @@
 import './cabinet.css';
 import { GAMES } from '../world/plan.js';
 import { sound } from './sfx.js';
+import { panel, CLOSE } from '../shell/panels.js';
 
 // One frame for all 18 games. A game is a module in ./play/ whose default export is
 //   { size: [w, h], how: 'D-PAD', pad: true, a: 'SPIN', low: false, unit: '', text: false, quiet: false, start(api) }
@@ -344,7 +345,9 @@ export function installGames(office) {
   function drawList() {
     const all = scores();
     list.innerHTML =
-      '<h2><span>GAMES</span><span>18</span></h2><div class="gl">' +
+      '<h2><span>GAMES</span><span>18</span>' +
+      CLOSE +
+      '</h2><div class="gl">' +
       GAMES.map((m) => {
         const best = (all[m.name] || [])[0];
         return (
@@ -364,11 +367,15 @@ export function installGames(office) {
       }).join('') +
       '</div>';
   }
+  const listOpened = panel(office, 'games', list, () => setList(false));
   function setList(on) {
     list.hidden = !on;
     office.showGames = on;
     btn.setAttribute('aria-pressed', on);
-    if (on) drawList();
+    if (on) {
+      drawList();
+      listOpened();
+    }
   }
   btn.onclick = () => setList(list.hidden);
   list.addEventListener('click', (e) => {
