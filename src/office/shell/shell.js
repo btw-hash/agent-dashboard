@@ -1,4 +1,5 @@
 import { LW, LH } from '../engine/pixel.js';
+import { panel } from './panels.js';
 
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
@@ -303,6 +304,7 @@ export function createShell(office, net) {
     if (e.key !== 'Escape') return;
     if (!$('#veil').hidden) $('#veil').hidden = true;
     else if (tv) setTv(false);
+    else office.emit('panel', null);
   });
 
   $('#connectBtn').onclick = () => {
@@ -359,10 +361,17 @@ export function createShell(office, net) {
       })
   );
 
+  const teamOpened = panel(office, 'team', $('#roster'), () => setTeam(false));
   function setTeam(on) {
     app.classList.toggle('team', on);
     $('#teamBtn').setAttribute('aria-pressed', on);
+    if (on) teamOpened();
   }
+  // the panels hang under the bar, whatever height it wraps to
+  const bar = $('.bar');
+  new ResizeObserver(() => app.style.setProperty('--top', bar.offsetHeight + 6 + 'px')).observe(
+    bar
+  );
   $('#teamBtn').onclick = () => setTeam(!app.classList.contains('team'));
 
   let slow = 0;

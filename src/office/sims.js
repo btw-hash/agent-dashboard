@@ -1,4 +1,5 @@
 import './sims.css';
+import { panel, CLOSE } from './shell/panels.js';
 import { INK, text } from './engine/pixel.js';
 import { nearNode } from './world/crowd.js';
 
@@ -54,7 +55,9 @@ export function installSims(office, shell) {
   bar.innerHTML =
     '<div class="simsnow" role="status"></div>' +
     '<div class="simsrow"><div class="simschips"></div>' +
-    '<button class="btn" data-a="all">All</button><button class="btn" data-a="none">None</button></div>';
+    '<button class="btn" data-a="all">All</button><button class="btn" data-a="none">None</button>' +
+    CLOSE +
+    '</div>';
   app.appendChild(bar);
   const nowEl = bar.querySelector('.simsnow'),
     chipsEl = bar.querySelector('.simschips');
@@ -199,10 +202,12 @@ export function installSims(office, shell) {
     true
   );
 
+  const barOpened = panel(office, 'sims', bar, () => on && setOn(false));
   function setOn(v) {
     on = v;
     btn.setAttribute('aria-pressed', v);
     bar.hidden = !v;
+    if (v) barOpened();
     if (!v) {
       [...ORD.keys()].forEach(release);
       SEL.clear();
